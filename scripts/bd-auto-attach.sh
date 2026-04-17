@@ -26,7 +26,7 @@ SOURCE=$(printf '%s' "$INPUT" | jq -r '.source // empty')
 BD_ID="${BD_ID:-}"
 [ -n "$BD_ID" ] || exit 0  # not a bd-attached session, no-op
 
-AGENT_HOME="${AGENT_HOME:-$HOME/Dropbox/Notes/agent}"
+AGENT_HOME="${AGENT_HOME:-$HOME/.bdx-agent}"
 
 # Verify bd issue + capture JSON (bd exits non-zero + emits {"error": ...} if missing)
 if ! ISSUE_JSON=$(bd show "$BD_ID" --json 2>/dev/null); then

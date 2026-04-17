@@ -1,6 +1,18 @@
 # bdx
 
-Claude Code plugin wrapping the [`bd` (beads)](https://github.com/gastownhall/beads) issue tracker into a full session-aware task workflow: auto-attach sessions to a bd task, enforce summary-before-close, and ship the full `bd.*` lifecycle as skills.
+> **Couples bd tasks to a durable markdown notebook at every lifecycle event (create → attach → dump → summarize → close). `bd` is the source of truth for task state; markdown is the narrative record.**
+
+Claude Code plugin for the [`bd` (beads)](https://github.com/gastownhall/beads) issue tracker. Turns bd into a session-aware task system: every task is born with a plan file, every session resuming a task gets pre-loaded with full context, and nothing closes without a written summary.
+
+## Why I built this
+
+I wanted to see what my agents were working on through beads, but I also wanted everything they were thinking — plans, mid-stream context, final summaries — persisted to disk, not locked inside ephemeral Claude sessions.
+
+The thing I care about most is **drift**. What did the plan say at the start, what did the implementation actually become, what decisions got made along the way and why? When you're pairing with an agent, those details evaporate the moment the session ends. Without a markdown record, you have the code and nothing else — no rationale, no alternatives considered, no "we tried X but backed out because Y."
+
+I also wanted to close sessions **without fear**. A running session holds a lot of working memory; dumping it to disk first means I can end cleanly and pick up later from the notebook, not from scratch.
+
+Everything lives as markdown with `bd-<id>` frontmatter and wikilink cross-references, which means you get [Obsidian graph view](https://help.obsidian.md/Plugins/Graph+view) for free — plans, summaries, and context dumps all show up as nodes, and over time you can see how tasks, decisions, and knowledge correlate across projects.
 
 ## What's in the box
 
@@ -16,6 +28,8 @@ Claude Code plugin wrapping the [`bd` (beads)](https://github.com/gastownhall/be
 - `manifest` — inspect a project on disk and add/update its `$AGENT_HOME/manifest.md` entry
 
 ### Hooks
+- **`SessionStart` (startup + resume)** → `bdx-ensure-agent-home.sh`
+  Resolves `$AGENT_HOME` (default `~/.bdx-agent`), auto-creates the `plan/`, `context/`, `summary/`, `inbox/` subdirs, and exports the value so every subsequent tool call in the session sees it.
 - **`SessionStart:startup`** → `bd-auto-attach.sh`
   If `$BD_ID` is set in the parent env, auto-loads the plan/context/summary, appends the session UUID to the plan's `sessions:` frontmatter, flips bd status `open → in_progress`, and emits the bundle as `additionalContext` on turn 1.
 - **`PreToolUse:Bash`** → `block-bare-bd-close.sh`
@@ -26,9 +40,29 @@ Claude Code plugin wrapping the [`bd` (beads)](https://github.com/gastownhall/be
 
 ## Prerequisites
 
-- `bd` (beads) CLI on `$PATH`
-- `$AGENT_HOME` set (defaults to `~/Dropbox/Notes/agent/`) with `plan/`, `context/`, `summary/`, `inbox/` subdirs
+- `bd` (beads) CLI on `$PATH` — [gastownhall/beads](https://github.com/gastownhall/beads)
 - `jq`, `python3` on `$PATH` (used by the auto-attach hook)
+
+## `$AGENT_HOME`
+
+Durable markdown (plans, context dumps, summaries, inbox) lives under `$AGENT_HOME`. The plugin defaults to `~/.bdx-agent/` and auto-creates the subdir layout on first run:
+
+```
+$AGENT_HOME/
+├── plan/       # long-form plans (created by /bdx:plan, also the execution prompt)
+├── context/    # mid-stream state dumps (/bdx:dump)
+├── summary/    # post-implementation writeups (/bdx:summarize, /bdx:close)
+└── inbox/      # mobile-capture seeds, triaged by /bdx:triage
+```
+
+**Override** by exporting `AGENT_HOME` in your shell rc before launching `claude`:
+
+```bash
+# e.g. use a Dropbox/iCloud path so plans sync across machines
+export AGENT_HOME="$HOME/Dropbox/Notes/agent"
+```
+
+The plugin hook respects whatever's set and only falls back to `~/.bdx-agent` when unset.
 
 ## Install
 
