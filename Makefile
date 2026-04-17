@@ -12,8 +12,8 @@ help:
 	@echo "Then review + commit + tag + push manually."
 
 patch minor major:
-	@./scripts/release.sh $@
+	@./dev/release.sh $@
 
 release:
 	@test -n "$(VERSION)" || (echo "usage: make release VERSION=x.y.z" >&2; exit 2)
-	@./scripts/release.sh set $(VERSION)
+	@./dev/release.sh set $(VERSION)
