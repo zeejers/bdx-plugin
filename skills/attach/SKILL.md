@@ -1,11 +1,11 @@
 ---
-name: bd.attach
+name: attach
 description: Attach the current Claude session to an existing beads task. Loads plan/context/summary artifacts, marks the session in the plan's sessions list, and sets bd status to in_progress.
 user-invocable: true
 argument-hint: bd-id
 ---
 
-Tap the current session into an existing beads issue / plan so Claude picks up cold with full task state. This is the counterpart to `bd.plan` (which creates a new task): `bd.attach` resumes an existing one.
+Tap the current session into an existing beads issue / plan so Claude picks up cold with full task state. This is the counterpart to `plan` (which creates a new task): `attach` resumes an existing one.
 
 Use when:
 - You want to continue work on `bd-xxx` in a fresh session
@@ -17,7 +17,7 @@ Use when:
 1. Resolve the bd-id from `$ARGUMENTS`. If missing, ask the user — do not guess.
 2. **Load task state** (read-only first):
    - `bd show <bd-id>` — issue details, description, labels, status, blockers
-   - `bd comments <bd-id>` — all prior comments (these contain links to summaries/contexts from bd.summarize / bd.dump)
+   - `bd comments <bd-id>` — all prior comments (these contain links to summaries/contexts from summarize / dump)
    - Find the plan: `ls $AGENT_HOME/plan/<bd-id>-*.md` (typically one match)
    - Find prior context dumps: `grep -l "^bd: <bd-id>$" "$AGENT_HOME/context"/*.md 2>/dev/null`
    - Find prior summaries: `grep -l "^bd: <bd-id>$" "$AGENT_HOME/summary"/*.md 2>/dev/null`
@@ -39,8 +39,8 @@ Use when:
 ## Rules
 
 - **Read before mutate.** Step 2 is entirely read-only so the user sees state before anything changes. Only step 3 writes.
-- **Don't re-plan.** If the plan feels stale or wrong, do NOT overwrite it — flag it to the user and let them decide whether to `bd.plan` a new task or edit the existing plan manually. Plans are append-only in spirit.
-- **Don't dump context here.** bd.attach only reads. Use `bd.dump` separately if you want to snapshot current state before continuing.
+- **Don't re-plan.** If the plan feels stale or wrong, do NOT overwrite it — flag it to the user and let them decide whether to `plan` a new task or edit the existing plan manually. Plans are append-only in spirit.
+- **Don't dump context here.** attach only reads. Use `dump` separately if you want to snapshot current state before continuing.
 - **Don't close or comment on the bd issue.** Attaching is a load operation, not a status broadcast. The only state change is `open → in_progress`.
 - **Ambiguous bd-id**: if the user passed a slug instead of a bd-id, try `bd search "<slug>"` and present matches; don't auto-pick.
 - **Preserve all other frontmatter.** When appending to the plan's `sessions:` list, every other key — `bd:`, `title:`, `created:`, `aliases:`, `tags:`, `private:`, `status:`, `external:`, anything user-added — must round-trip untouched.

@@ -1,19 +1,19 @@
 ---
-name: bd.scope
-description: Scope an existing unscoped bd issue — add project + component labels and write its plan file. For bd issues created directly (e.g. from phone) that never went through bd.plan.
+name: scope
+description: Scope an existing unscoped bd issue — add project + component labels and write its plan file. For bd issues created directly (e.g. from phone) that never went through plan.
 user-invocable: true
 argument-hint: bd-id
 ---
 
-Take an existing bd issue that lacks a project label and/or plan file, and bring it into the qf-managed system: add manifest-validated labels, write `$AGENT_HOME/plan/<bd-id>-<slug>.md`, cross-link. This is the "retarget `bd.plan` at an existing bd" operation.
+Take an existing bd issue that lacks a project label and/or plan file, and bring it into the qf-managed system: add manifest-validated labels, write `$AGENT_HOME/plan/<bd-id>-<slug>.md`, cross-link. This is the "retarget `plan` at an existing bd" operation.
 
-Used standalone (`/bd.scope bd-xxx`) or called from `bd.triage` when it decides an unscoped bd should become a real task.
+Used standalone (`/bdx:scope bd-xxx`) or called from `triage` when it decides an unscoped bd should become a real task.
 
 ## When to use
 
 - A bd issue was created via `bd create` (phone, quick capture) without labels or plan
 - An existing bd issue needs labels updated and a plan generated after the fact
-- `bd.triage` delegates here for the "scope" branch of its decision tree
+- `triage` delegates here for the "scope" branch of its decision tree
 
 **Do not use** on a bd that already has a plan file — in that case the plan is authoritative; edit it directly. Check for `plan:` in the bd's description or grep `$AGENT_HOME/plan/` for the bd-id before acting.
 
@@ -25,13 +25,13 @@ Used standalone (`/bd.scope bd-xxx`) or called from `bd.triage` when it decides 
 4. **Derive slug** (kebab-case) from the bd title.
 5. **Derive labels** (see Labels section below). Apply via `bd update <id> -l <project> [-l <component>...]`. bd labels are additive — existing labels are preserved.
 6. **Read `$CLAUDE_SESSION_ID`** (set by SessionStart hook). If empty, use `sessions: []`.
-7. **Write the plan file** at `$AGENT_HOME/plan/<bd-id>-<slug>.md` using the same template as `bd.plan`. Seed Goal/Context from the bd's existing description.
+7. **Write the plan file** at `$AGENT_HOME/plan/<bd-id>-<slug>.md` using the same template as `plan`. Seed Goal/Context from the bd's existing description.
 8. **Cross-link**: `bd update <id> -d "plan: $AGENT_HOME/plan/<bd-id>-<slug>.md"` (replaces description — so preserve the original text inside the plan's Goal/Context first, not the bd body).
 9. **Report** bd-id, labels added, plan path in one line.
 
 ## Labels
 
-Same rules as `bd.plan` — consult `$AGENT_HOME/manifest.md` as the authoritative list.
+Same rules as `plan` — consult `$AGENT_HOME/manifest.md` as the authoritative list.
 
 ### Project label (required)
 
@@ -39,7 +39,7 @@ The bd issue didn't come from a git context, so we can't derive from `git rev-pa
 
 1. **Scan bd content for manifest signals**: match title + description against manifest slugs, `aliases:`, and component names. If exactly one project matches, use its canonical slug.
 2. **If ambiguous or no match**: read `$AGENT_HOME/manifest.md`, present known project slugs as a numbered list, ask the user to pick. Do not guess.
-3. **If user answered during `bd.triage`**: accept the label passed in from the triage context rather than re-asking.
+3. **If user answered during `triage`**: accept the label passed in from the triage context rather than re-asking.
 
 ### Component labels (optional)
 
@@ -52,7 +52,7 @@ Only add when the bd's content clearly scopes to a subcomponent of the chosen pr
 
 ## Plan file template
 
-Identical to `bd.plan`. Key seeding differences when scoping an existing bd:
+Identical to `plan`. Key seeding differences when scoping an existing bd:
 
 - **Goal**: extract from the bd's title + description. Reword to 1–2 sentences if the description was a single-liner.
 - **Context**: lead with "Originally captured as `bd-xxx` on `<created-date>`." then preserve the bd's original description body. Link any external refs found in the description.
@@ -62,10 +62,10 @@ Identical to `bd.plan`. Key seeding differences when scoping an existing bd:
 ## Rules
 
 - **Idempotent**: running twice on the same bd is a no-op (guard in step 3 catches it).
-- **No status change**: scoping does not set `in_progress`. The bd stays in whatever status it was in (usually `open`). `bd.attach` is the skill that flips to `in_progress`.
+- **No status change**: scoping does not set `in_progress`. The bd stays in whatever status it was in (usually `open`). `attach` is the skill that flips to `in_progress`.
 - **Preserve the original description inside the plan before overwriting with the plan pointer.** The `bd update -d` in step 8 replaces the description — if you don't copy the original into the plan's Context first, it's lost.
-- **One plan per bd-id.** Same rule as `bd.plan` — never rewrite the plan after creation.
-- **Do not execute work.** Scoping just sets up the task for later pickup via `bd.attach`.
+- **One plan per bd-id.** Same rule as `plan` — never rewrite the plan after creation.
+- **Do not execute work.** Scoping just sets up the task for later pickup via `attach`.
 
 ## Process
 

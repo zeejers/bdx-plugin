@@ -1,5 +1,5 @@
 ---
-name: bd.dump
+name: dump
 description: Dump all relevant and important context from the current conversation into $AGENT_HOME/context so it can be reloaded later.
 user-invocable: true
 argument-hint: optional-label
@@ -7,7 +7,7 @@ argument-hint: optional-label
 
 Dump the important context of this conversation to `$AGENT_HOME/context/` as an **Obsidian-friendly note**. The user opens these in Obsidian and relies on graph view to see how context dumps connect to summaries, plans, files, concepts, and tickets — so every cross-reference must be a wikilink (`[[...]]`).
 
-This is a broader, lossier snapshot than `bd.summarize` — it captures conversational state (what the user wants, what's been tried, what's pending) rather than a clean post-implementation writeup.
+This is a broader, lossier snapshot than `summarize` — it captures conversational state (what the user wants, what's been tried, what's pending) rather than a clean post-implementation writeup.
 
 ## Output location
 
@@ -94,7 +94,7 @@ related:
 - **Prefer signal over volume.** Skip chitchat, resolved detours, and anything trivially re-derivable from the repo.
 - **Preserve verbatim what matters verbatim.** Exact error messages, exact user phrasing on preferences, exact command outputs — paste these, don't paraphrase.
 - **Don't invent.** If you don't know a section's answer, write "unknown" or omit. Never guess.
-- **Don't duplicate `bd.summarize`.** If the work is done and clean, prefer `bd.summarize`. Use `bd.dump` mid-flight or when work is messy/incomplete.
+- **Don't duplicate `summarize`.** If the work is done and clean, prefer `summarize`. Use `dump` mid-flight or when work is messy/incomplete.
 - **Capture constraints, not just content.** "User hates emoji in code", "must stay on Node 18", "can't touch auth without review" — these are load-bearing.
 - **Include cwd and timestamp** so the dump is interpretable out of context.
 - **Every cross-reference is a wikilink.** If you catch yourself writing `[text](path.md)` for a vault note, convert it.

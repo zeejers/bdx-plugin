@@ -1,5 +1,5 @@
 ---
-name: bd.manifest
+name: manifest
 description: Inspect a project on disk and add (or update) its entry in $AGENT_HOME/manifest.md. Infers slug, path, repo, type, components, and notes from the filesystem and git metadata.
 user-invocable: true
 argument-hint: optional-project-path (defaults to cwd)

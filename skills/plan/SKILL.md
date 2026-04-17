@@ -1,11 +1,11 @@
 ---
-name: bd.plan
+name: plan
 description: Create a beads issue and write a structured plan to $AGENT_HOME/plan that doubles as the execution prompt. Cross-links bd issue ↔ plan file.
 user-invocable: true
 argument-hint: optional-title-or-slug
 ---
 
-Persist the plan that's been discussed in this conversation as an **Obsidian-friendly, agent-executable plan** at `$AGENT_HOME/plan/`, and create the paired beads issue so state lives in `bd` and content lives in Obsidian. This is the **before** half of the bd.plan / bd.dump / bd.summarize triad.
+Persist the plan that's been discussed in this conversation as an **Obsidian-friendly, agent-executable plan** at `$AGENT_HOME/plan/`, and create the paired beads issue so state lives in `bd` and content lives in Obsidian. This is the **before** half of the plan / dump / summarize triad.
 
 This skill is the only way a plan enters the system — do not write plan files ad-hoc elsewhere.
 
@@ -150,7 +150,7 @@ sessions:
 - **Capture decisions already made, separately from open questions.** Future-you needs to distinguish "settled" from "pending."
 - **Don't bloat.** A plan is a handoff, not a design doc. If a section is empty, omit it — don't leave stub "TBD" lines.
 - **Every cross-reference is a wikilink.** If you catch yourself writing `[text](path.md)` for a vault note, convert it.
-- **One plan per bd-id.** If the task's shape has fundamentally changed, close the old bd and `bd.plan` a new one rather than rewriting history.
+- **One plan per bd-id.** If the task's shape has fundamentally changed, close the old bd and `plan` a new one rather than rewriting history.
 - **`private: false` by default.** Flip to `true` for side-project/personal plans that shouldn't sync to teammates. The sync layer (not this skill) honors the flag — the skill just writes it.
 
 ## Process

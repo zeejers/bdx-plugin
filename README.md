@@ -5,21 +5,21 @@ Claude Code plugin wrapping the [`bd` (beads)](https://github.com/gastownhall/be
 ## What's in the box
 
 ### Skills (`/bdx:<name>`)
-- `bd.plan` — create a bd issue + structured plan file
-- `bd.attach` — resume an existing bd task, load plan/context/summary into the session
-- `bd.dump` — mid-flight context snapshot (reloadable later)
-- `bd.summarize` — post-implementation writeup to `$AGENT_HOME/summary/`
-- `bd.close` — finalize a task (writes summary if missing, then closes with resolution)
-- `bd.label` — apply plain labels or namespaced external refs (`jira:ABC-123`, `linear:FOO-456`)
-- `bd.scope` — add project + component labels to an existing unscoped bd + write its plan
-- `bd.triage` — drain inbox / unscoped bd issues into real tasks
-- `bd.manifest` — inspect a project on disk and add/update its `$AGENT_HOME/manifest.md` entry
+- `plan` — create a bd issue + structured plan file
+- `attach` — resume an existing bd task, load plan/context/summary into the session
+- `dump` — mid-flight context snapshot (reloadable later)
+- `summarize` — post-implementation writeup to `$AGENT_HOME/summary/`
+- `close` — finalize a task (writes summary if missing, then closes with resolution)
+- `label` — apply plain labels or namespaced external refs (`jira:ABC-123`, `linear:FOO-456`)
+- `scope` — add project + component labels to an existing unscoped bd + write its plan
+- `triage` — drain inbox / unscoped bd issues into real tasks
+- `manifest` — inspect a project on disk and add/update its `$AGENT_HOME/manifest.md` entry
 
 ### Hooks
 - **`SessionStart:startup`** → `bd-auto-attach.sh`
   If `$BD_ID` is set in the parent env, auto-loads the plan/context/summary, appends the session UUID to the plan's `sessions:` frontmatter, flips bd status `open → in_progress`, and emits the bundle as `additionalContext` on turn 1.
 - **`PreToolUse:Bash`** → `block-bare-bd-close.sh`
-  Blocks direct `bd close` (and `bd update --status closed`) so you're forced through `/bdx:bd.close`, which writes a summary first.
+  Blocks direct `bd close` (and `bd update --status closed`) so you're forced through `/bdx:close`, which writes a summary first.
 
 ### Launcher
 - `scripts/bdc` — `bdc <bd-id>` sets `BD_ID`, derives a slug from the bd title, and runs `claude -n "<bd-id>-<slug>"`. Symlink to `~/bin/bdc` or alias it.
@@ -51,7 +51,7 @@ bdc bd-abc         # runs: BD_ID=bd-abc claude -n "bd-abc-<slug>"
 
 Close a task (writes summary, then closes):
 ```
-/bdx:bd.close bd-abc
+/bdx:close bd-abc
 ```
 
 Override for the rare raw close:

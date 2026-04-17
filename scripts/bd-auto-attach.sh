@@ -1,6 +1,6 @@
 #!/bin/bash
 # SessionStart hook: if $BD_ID is set in the parent env, auto-attach this
-# session to that beads task without running the /bdx:bd.attach skill manually.
+# session to that beads task without running the /bdx:attach skill manually.
 #
 # Actions:
 #   1. Verify the bd issue exists

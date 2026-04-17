@@ -1,5 +1,5 @@
 ---
-name: bd.summarize
+name: summarize
 description: Summarize an implementation with full context, decisions made by agent and human, and a link to the plan if applicable. Writes to $AGENT_HOME/summary.
 user-invocable: true
 argument-hint: optional-focus-or-filename
@@ -100,4 +100,4 @@ sessions:
 
 ## When the work is done
 
-`bd.summarize` does **not** close the beads issue — that's the user's call via `bd close <id> -r "<resolution>"`. Writing the summary and closing are distinct acts: you can have a finished summary with follow-ups still tracked on the same open issue.
+`summarize` does **not** close the beads issue — that's the user's call via `bd close <id> -r "<resolution>"`. Writing the summary and closing are distinct acts: you can have a finished summary with follow-ups still tracked on the same open issue.

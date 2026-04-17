@@ -1,5 +1,5 @@
 ---
-name: bd.label
+name: label
 description: Label a beads issue with plain labels or namespaced external refs (jira:ABC-123, linear:FOO-456, etc.). Applies to the bd issue and, for namespaced refs, propagates into the plan markdown's frontmatter + Obsidian wikilinks. Contexts/summaries are left as historical snapshots.
 user-invocable: true
 argument-hint: bd-id <label-or-ref> [<label-or-ref> ...]
@@ -20,7 +20,7 @@ Add labels or external references to an existing beads issue and sync the plan m
    - Locate the plan: `ls $AGENT_HOME/plan/<bd-id>-*.md`.
    - If found, read its frontmatter. Add any new refs to an `external:` list (create the key if missing, dedupe entries).
    - In the plan body, ensure a `## Related` section exists and contains a wikilink per ref. Use the ref's non-namespace portion for the wikilink label: `jira:ZAP-50` → `[[ZAP-50]]`, `gh:listscrub/platform#412` → `[[listscrub#412]]`. Dedupe — don't add a wikilink that's already there.
-   - If no plan file exists (task was created without `bd.plan`), skip the markdown update silently. Bd labels are enough.
+   - If no plan file exists (task was created without `plan`), skip the markdown update silently. Bd labels are enough.
 6. **Do not touch contexts or summaries.** They're historical snapshots. A ref added later doesn't belong in a record of the past.
 7. **Report** one line per label applied, then one line per file modified: `Linked bd-le4 to jira:ZAP-50, priority-high — plan updated.`
 

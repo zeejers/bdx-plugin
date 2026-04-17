@@ -1,11 +1,11 @@
 #!/bin/bash
 # PreToolUse hook: block `bd close` in Bash tool calls so Claude is forced
-# to go through /bdx:bd.close (which runs bdx:bd.summarize first, then closes the
+# to go through /bdx:close (which runs bdx:summarize first, then closes the
 # bd issue with a resolution). Summaries otherwise get skipped and history
 # is lost.
 #
 # Bypass: set QF_ALLOW_BARE_BD_CLOSE=1 in the session env (rare — normally
-# you never want this; /bdx:bd.close handles the abandoned case too).
+# you never want this; /bdx:close handles the abandoned case too).
 
 set -u
 
@@ -31,11 +31,11 @@ if printf '%s' "$CMD" | grep -Eq "${BOUNDARY}bd[[:space:]]+close\b" \
   cat >&2 <<'EOF'
 Blocked: do not call `bd close` directly.
 
-Run `/bdx:bd.close <bd-id>` instead — it writes a summary via bdx:bd.summarize
+Run `/bdx:close <bd-id>` instead — it writes a summary via bdx:summarize
 (recording what was built + decisions + links), then closes the bd issue
 with a resolution message. Without the summary, task history is lost.
 
-For abandoned work: `/bdx:bd.close <bd-id> abandoned because <reason>` still
+For abandoned work: `/bdx:close <bd-id> abandoned because <reason>` still
 closes, it just records the abandonment rationale.
 
 Escape hatch (rare): `QF_ALLOW_BARE_BD_CLOSE=1 bd close ...`

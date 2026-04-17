@@ -1,18 +1,18 @@
 ---
-name: bd.triage
+name: triage
 description: Drain the inbox and/or unscoped bd issues — for each item, decide whether it attaches to an existing beads task or seeds a new one. Processes all items by default; does NOT start executing work.
 user-invocable: true
 argument-hint: "optional — 'inbox' | 'bd' | <filename> | <bd-id>"
 ---
 
-Turn mobile-captured work (inbox markdown or bare `bd create` items) into real task state. By default, drains **both** sources: for each item, append to an existing bd issue (if there's a clear active workstream) or create/scope a task of its own. Output is always tasks ready to be picked up later via `bd.attach` — triage never starts execution.
+Turn mobile-captured work (inbox markdown or bare `bd create` items) into real task state. By default, drains **both** sources: for each item, append to an existing bd issue (if there's a clear active workstream) or create/scope a task of its own. Output is always tasks ready to be picked up later via `attach` — triage never starts execution.
 
 ## Sources
 
 Triage draws from two independent queues:
 
 1. **Inbox** — files in `$AGENT_HOME/inbox/`. Created by the phone capture flow. Content is free-form markdown; the file itself gets deleted on success.
-2. **Unscoped bd** — `bd list --no-labels -s open,in_progress --no-pager` (plus stale `--empty-description` filter if applicable). Items created directly via `bd create` that never went through `bd.plan`, so they have no project label. The bd issue is preserved across triage — we add labels / scope it, never delete.
+2. **Unscoped bd** — `bd list --no-labels -s open,in_progress --no-pager` (plus stale `--empty-description` filter if applicable). Items created directly via `bd create` that never went through `plan`, so they have no project label. The bd issue is preserved across triage — we add labels / scope it, never delete.
 
 ## Modes (argument grammar)
 
@@ -45,7 +45,7 @@ Parse order: literal keyword → bd-id regex → filename lookup → otherwise e
    | Decision | Inbox source | Unscoped bd source |
    |---|---|---|
    | **Attach** | `bd comment <target> "inbox: <verbatim content>"` | `bd comment <target> "merged from bd-xxx: <title> — <body>"`, then `bd supersede bd-xxx --with=<target>` |
-   | **Create/Scope** | run `bd.plan` with the inbox content as the seed (derives labels, priority `-p 2` default, status `open`) | run `bd.scope bd-xxx` (adds labels, writes plan file, preserves original description inside plan Context) |
+   | **Create/Scope** | run `plan` with the inbox content as the seed (derives labels, priority `-p 2` default, status `open`) | run `scope bd-xxx` (adds labels, writes plan file, preserves original description inside plan Context) |
    | **Cleanup** | `rm` inbox file after success | nothing — the bd stays, now scoped |
 
    If attaching an inbox note changes scope of the target, add a second comment flagging "plan may need update".
@@ -69,7 +69,7 @@ After the silent pass, surface ambiguous items to the user as a single batch at 
 
 User answers per-item; process their choices. Skipped items stay in place (inbox file untouched; bd stays unscoped).
 
-Note the label difference per source: inbox items use [c]reate, bd items use [s]cope (mnemonic for `bd.scope`). Both mean "this item becomes its own task." For bd items, [k]skip is used instead of [s]kip to avoid colliding with scope.
+Note the label difference per source: inbox items use [c]reate, bd items use [s]cope (mnemonic for `scope`). Both mean "this item becomes its own task." For bd items, [k]skip is used instead of [s]kip to avoid colliding with scope.
 
 ## Final report
 
@@ -95,12 +95,12 @@ Skipped:
 
 ## Rules
 
-- **Never start executing work.** Triage converts capture to task; that's it. Items stay in `open` (new/scoped) or `in_progress` (attach of inbox) — execution is a separate deliberate act via `bd.attach`.
-- **Never rewrite an existing plan.** When attaching, the note goes into a `bd comment`, not into the plan file. When scoping, `bd.scope` guards against existing plans.
+- **Never start executing work.** Triage converts capture to task; that's it. Items stay in `open` (new/scoped) or `in_progress` (attach of inbox) — execution is a separate deliberate act via `attach`.
+- **Never rewrite an existing plan.** When attaching, the note goes into a `bd comment`, not into the plan file. When scoping, `scope` guards against existing plans.
 - **Err toward creating/scoping on auto-decisions.** A lossy capture merged into the wrong task is worse than a slight duplication. If the match isn't clearly the same workstream, treat the item as ambiguous and surface it.
 - **Silent pass first, then surface ambiguities.** Users skimming the final report want to see *what was done*, not N interactive prompts. Batch the asks at the end.
 - **Don't auto-delete inbox files if anything failed.** Only `rm` after the bd operation succeeded. A failed triage on one item should not stop the others; log and continue.
-- **For bd sources, never modify the issue until a decision is executed.** Don't update labels or status during the silent pass until we know the decision — attaches use `bd supersede`, scopes use `bd.scope`.
+- **For bd sources, never modify the issue until a decision is executed.** Don't update labels or status during the silent pass until we know the decision — attaches use `bd supersede`, scopes use `scope`.
 - **Skipped items stay.** Inbox files untouched; bd items remain unscoped. They'll come up again on the next triage run.
 
 ## Process
