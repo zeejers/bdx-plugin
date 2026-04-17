@@ -1,0 +1,33 @@
+#!/bin/bash
+# bdc — launch claude attached to a beads task.
+#
+# Usage:
+#   bdc bd-xxx [extra claude args]
+#
+# Sets BD_ID in the environment and names the session after the bd-id + slug
+# so `claude --resume` lists are scannable. The bd-auto-attach SessionStart
+# hook then loads the plan/context/summary and flips status to in_progress.
+#
+# Put on PATH (e.g. `ln -s ~/.claude/hooks/bdc ~/bin/bdc`) or alias to it.
+
+set -eu
+
+if [ $# -lt 1 ]; then
+  echo "usage: bdc <bd-id> [claude args...]" >&2
+  exit 2
+fi
+
+BD_ID="$1"; shift
+
+# Derive a filesystem-safe slug from the bd title for -n naming
+SLUG=$(bd show "$BD_ID" --json 2>/dev/null \
+  | jq -r '.[0].title // empty' \
+  | tr '[:upper:]' '[:lower:]' \
+  | tr -c 'a-z0-9' '-' \
+  | sed -E 's/-+/-/g; s/^-|-$//g' \
+  | cut -c1-40)
+
+NAME="$BD_ID${SLUG:+-$SLUG}"
+
+export BD_ID
+exec claude -n "$NAME" "$@"
