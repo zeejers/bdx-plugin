@@ -1,3 +1,16 @@
+## v0.3.3 (2026-04-17)
+
+I can see the git commits you've provided, but I notice that while you mentioned "code diffs below," no actual code diffs were included in your message. 
+
+Based solely on the commit messages provided, I can only identify one specific feature:
+
+### ✨ Features
+- [commits] Add session tracking with capture-session-id hook
+
+The other commits (releases v0.3.3 and v0.3.2, marketplace changes, renames, and general updates) don't provide enough specific information about what was actually implemented to create meaningful changelog entries without seeing the actual code diffs.
+
+To write a complete and accurate changelog, I would need to see the actual code changes (diffs) for each commit to understand what specific functionality, fixes, or improvements were made.
+
 ## Unreleased (2026-04-17)
 
 Based on the provided commit messages, here is the changelog:
