@@ -92,10 +92,10 @@ Close a task (writes summary, then closes):
 
 Override for the rare raw close:
 ```bash
-QF_ALLOW_BARE_BD_CLOSE=1 bd close bd-abc
+BDX_ALLOW_BARE_BD_CLOSE=1 bd close bd-abc
 ```
 
 ## Escape hatches
 
 - `BD_ID` unset → SessionStart hook is a silent no-op; normal `claude` invocations are unaffected
-- `QF_ALLOW_BARE_BD_CLOSE=1` → bypass the `bd close` guard for one command
+- `BDX_ALLOW_BARE_BD_CLOSE=1` → bypass the `bd close` guard for one command

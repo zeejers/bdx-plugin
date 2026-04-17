@@ -15,7 +15,7 @@ Closing is deliberately separate from summarizing — a task can have a written 
 2. Check for an existing summary: `grep -l "^bd: <bd-id>$" "$AGENT_HOME/summary"/*.md` (a summary is any file with the matching `bd:` frontmatter line).
 3. **If no summary exists**, run the full `summarize` process for this bd-id before continuing. Do not skip this — summaries are the durable record of the work; a close without one loses history.
 4. If resolution message wasn't passed in, prompt for a one-line resolution (or offer a default like "done" for clean completions, "abandoned: <reason>" for abandoned plans).
-5. Close the issue: `bd close <bd-id> -r "<resolution>"`.
+5. Close the issue: `BDX_ALLOW_BARE_BD_CLOSE=1 bd close <bd-id> -r "<resolution>"`. The inline env assignment signals the plugin's guard hook to allow this close through; without it the hook blocks all bare `bd close` calls.
 6. Report: bd-id, resolution, and the summary path.
 
 ## Resolution message guidance
@@ -38,5 +38,5 @@ Closing is deliberately separate from summarizing — a task can have a written 
 2. Resolve the resolution message (from `$ARGUMENTS` or prompt).
 3. Look for a summary with `grep -l "^bd: <bd-id>$" "$AGENT_HOME/summary"/*.md 2>/dev/null`.
 4. If no summary is found → invoke the `summarize` process (follow that skill's instructions end-to-end, with this bd-id). After it writes the summary, continue.
-5. Run `bd close <bd-id> -r "<resolution>"`.
+5. Run `BDX_ALLOW_BARE_BD_CLOSE=1 bd close <bd-id> -r "<resolution>"`.
 6. Report one line: `Closed <bd-id>: "<resolution>" — summary at <path>`.
