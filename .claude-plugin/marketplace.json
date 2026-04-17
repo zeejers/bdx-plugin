@@ -1,0 +1,13 @@
+{
+  "name": "bdx-marketplace",
+  "owner": {
+    "name": "Zach Sherbondy"
+  },
+  "plugins": [
+    {
+      "name": "bdx",
+      "source": "./",
+      "description": "Beads workflow skills + hooks: auto-attach sessions to bd tasks, enforce summary-before-close, and bundle the bd.* task lifecycle skills."
+    }
+  ]
+}
