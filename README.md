@@ -28,6 +28,8 @@ Everything lives as markdown with `bd-<id>` frontmatter and wikilink cross-refer
 - `manifest` — inspect a project on disk and add/update its `$AGENT_HOME/manifest.md` entry
 
 ### Hooks
+- **`SessionStart` (startup + resume)** → `capture-session-id.sh`
+  Exposes the session UUID as `$CLAUDE_SESSION_ID` to all downstream tool calls, so `/bdx:plan`, `/bdx:dump`, and `/bdx:summarize` can record which session produced each artifact in the plan's `sessions:` frontmatter. Enables `claude --resume <uuid>` workflows.
 - **`SessionStart` (startup + resume)** → `bdx-ensure-agent-home.sh`
   Resolves `$AGENT_HOME` (default `~/.bdx-agent`), auto-creates the `plan/`, `context/`, `summary/`, `inbox/` subdirs, and exports the value so every subsequent tool call in the session sees it.
 - **`SessionStart:startup`** → `bd-auto-attach.sh`
