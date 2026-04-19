@@ -12,9 +12,13 @@ Closing is deliberately separate from summarizing — a task can have a written 
 ## What this skill does (in order)
 
 1. Parse `$ARGUMENTS` for the bd-id and optional resolution message. If the bd-id is missing, infer from the active conversation or plan file in context; ask the user if still ambiguous.
-2. Check for an existing summary: `grep -l "^bd: <bd-id>$" "$AGENT_HOME/summary"/*.md` (a summary is any file with the matching `bd:` frontmatter line).
+2. Check for an existing summary: `grep -l "^bd: <bd-id>$" "$AGENT_HOME/summary"/*.md` (a summary is any file with the matching `bd:` frontmatter line). Run this in parallel with step 1's id resolution when possible.
 3. **If no summary exists**, run the full `summarize` process for this bd-id before continuing. Do not skip this — summaries are the durable record of the work; a close without one loses history.
-4. If resolution message wasn't passed in, prompt for a one-line resolution (or offer a default like "done" for clean completions, "abandoned: <reason>" for abandoned plans).
+4. Resolve the resolution message:
+   - If passed in `$ARGUMENTS` → use it.
+   - If `$ARGUMENTS` contains "abandon" / "kill" / "drop" → default to `"abandoned: <verbatim-trailing-text>"`.
+   - Otherwise → default silently to `"done"`. Do **not** prompt — the summary is the durable record; the resolution is a one-line tombstone and "done" is fine for the clean-completion case.
+   - Only prompt if the close is ambiguous (e.g. summary mentions unresolved follow-ups and the user hasn't signaled intent).
 5. Close the issue: `BDX_ALLOW_BARE_BD_CLOSE=1 bd close <bd-id> -r "<resolution>"`. The inline env assignment signals the plugin's guard hook to allow this close through; without it the hook blocks all bare `bd close` calls.
 6. Report: bd-id, resolution, and the summary path.
 
@@ -35,8 +39,8 @@ Closing is deliberately separate from summarizing — a task can have a written 
 ## Process
 
 1. Resolve the bd-id (from `$ARGUMENTS`, active plan file, or ask).
-2. Resolve the resolution message (from `$ARGUMENTS` or prompt).
-3. Look for a summary with `grep -l "^bd: <bd-id>$" "$AGENT_HOME/summary"/*.md 2>/dev/null`.
+2. **Single batched message** — run in parallel: summary grep (`grep -l "^bd: <bd-id>$" "$AGENT_HOME/summary"/*.md 2>/dev/null`), and `bd show <bd-id>` to confirm the issue exists and is closeable.
+3. Resolve the resolution: `$ARGUMENTS` if passed, `"abandoned: ..."` on abandon-signal keywords, else `"done"`. No prompt for the clean case.
 4. If no summary is found → invoke the `summarize` process (follow that skill's instructions end-to-end, with this bd-id). After it writes the summary, continue.
 5. Run `BDX_ALLOW_BARE_BD_CLOSE=1 bd close <bd-id> -r "<resolution>"`.
 6. Report one line: `Closed <bd-id>: "<resolution>" — summary at <path>`.

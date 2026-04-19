@@ -15,14 +15,20 @@ Use when:
 ## What this skill does (in order)
 
 1. Resolve the bd-id from `$ARGUMENTS`. If missing, ask the user — do not guess.
-2. **Load task state** (read-only first):
+2. **Load task state** (read-only first). **Batch these six operations in a single tool-call message — they're independent and sequential execution wastes roundtrips:**
    - `bd show <bd-id>` — issue details, description, labels, status, blockers
    - `bd comments <bd-id>` — all prior comments (these contain links to summaries/contexts from summarize / dump)
    - Find the plan: `ls $AGENT_HOME/plan/<bd-id>-*.md` (typically one match)
    - Find prior context dumps: `grep -l "^bd: <bd-id>$" "$AGENT_HOME/context"/*.md 2>/dev/null`
    - Find prior summaries: `grep -l "^bd: <bd-id>$" "$AGENT_HOME/summary"/*.md 2>/dev/null`
-   - **Look up the project** in `$AGENT_HOME/manifest.md` using the project label from `bd show` — pull `path`, `type`, and `notes` for the briefing. If the project isn't in the manifest, flag it (the user may need to add it).
-   - Read the plan file end-to-end. Read the most recent context dump (if any) end-to-end. Skim summaries.
+   - Read `$AGENT_HOME/manifest.md`
+
+   Then (once the first batch returns) batch a second round:
+   - Read the plan file end-to-end
+   - Read the most recent context dump (if any) end-to-end
+   - Skim summaries
+
+   **Look up the project** in the manifest using the project label from `bd show` — pull `path`, `type`, and `notes` for the briefing. If the project isn't in the manifest, flag it.
 3. **Attach the session** (mutate):
    - If `$CLAUDE_SESSION_ID` is set, open the plan file's frontmatter `sessions:` list. If the UUID isn't already present, append it. If the list doesn't exist, create it.
    - If `$CLAUDE_SESSION_ID` is empty (e.g. running in `--print` mode or the hook didn't fire), skip silently — do not fail.
@@ -48,10 +54,9 @@ Use when:
 ## Process
 
 1. Resolve bd-id from `$ARGUMENTS`; ask if missing.
-2. Run `bd show <bd-id>`, `bd comments <bd-id>` (capture outputs).
-3. Locate and read the plan: `$AGENT_HOME/plan/<bd-id>-*.md`.
-4. Locate prior contexts/summaries via grep on `bd: <bd-id>`.
-5. If `$CLAUDE_SESSION_ID` set and not already in the plan's `sessions:` frontmatter, append it.
-6. If bd status is `open`, `bd update <bd-id> --status in_progress`. If `closed`, warn + prompt.
-7. Print the briefing (title, status, plan overview, recent comments, next step).
-8. Report the one-line confirmation.
+2. **Single batched message** — run in parallel: `bd show`, `bd comments`, `ls plan`, `grep contexts`, `grep summaries`, read manifest.
+3. **Second batched message** — run in parallel: read plan file, read most recent context, skim summaries.
+4. If `$CLAUDE_SESSION_ID` set and not already in the plan's `sessions:` frontmatter, append it.
+5. If bd status is `open`, `bd update <bd-id> --status in_progress`. If `closed`, warn + prompt.
+6. Print the briefing (title, status, plan overview, recent comments, next step).
+7. Report the one-line confirmation.

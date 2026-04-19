@@ -78,6 +78,27 @@ claude --plugin-dir ~/src/github.com/bdx-plugin
 claude plugin install bdx@<marketplace>
 ```
 
+## Recommended: skip permission prompts for bdx
+
+Every `/bdx:*` skill fires `bd` subcommands and writes to `$AGENT_HOME/`. Without an allowlist, Claude Code prompts on each one — which defeats most of the point of the skills.
+
+Drop this into `~/.claude/settings.json` (or the project-level `.claude/settings.json`):
+
+```json
+{
+  "permissions": {
+    "allow": [
+      "Bash(bd:*)",
+      "Read(~/.bdx-agent/**)",
+      "Write(~/.bdx-agent/**)",
+      "Edit(~/.bdx-agent/**)"
+    ]
+  }
+}
+```
+
+If you've overridden `AGENT_HOME` (e.g. `~/Dropbox/Notes/agent`), swap that path into the three `~/.bdx-agent/**` entries. The `Bash(bd:*)` line covers every bd subcommand; destructive `bd close` calls are still caught by the plugin's `PreToolUse` guard hook, so you don't lose the summary-first invariant.
+
 ## Usage
 
 Start a session attached to a bd task:
