@@ -1,3 +1,14 @@
+## v0.3.5 (2026-04-20)
+
+I can see the commit message "5841e03 Personas" but no code diffs were provided in your input. Without the actual code changes, I cannot analyze what was implemented and write meaningful release notes.
+
+To write accurate changelog entries, I need to see the code diffs that show:
+- What files were changed
+- What functions/components were added, modified, or removed
+- What the actual implementation does
+
+Could you please provide the code diffs for commit 5841e03 so I can analyze the actual changes and write proper release notes?
+
 ## v0.3.4 (2026-04-19)
 
 Based on the commit provided, I can only see the commit message but no code diffs were included. Here's what I can determine from the available information:
