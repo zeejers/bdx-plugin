@@ -1,3 +1,12 @@
+## v0.3.4 (2026-04-19)
+
+Based on the commit provided, I can only see the commit message but no code diffs were included. Here's what I can determine from the available information:
+
+### 🛠️ Improvements
+- [commits] Improved documentation and made obvious actions more autonomous with reduced user input requirements
+
+**Note:** No code diffs were provided to analyze the specific implementation details of these improvements.
+
 ## v0.3.3 (2026-04-17)
 
 I can see the git commits you've provided, but I notice that while you mentioned "code diffs below," no actual code diffs were included in your message. 
