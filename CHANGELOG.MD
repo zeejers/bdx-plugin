@@ -1,3 +1,13 @@
+## v0.4.0 (2026-04-22)
+
+I can see the commit messages you've provided:
+- 5d83707 .
+- 5841e03 Personas
+
+However, I don't see any code diffs or actual code changes in your message. Without the actual code diffs showing what was modified, added, or removed, I cannot write an accurate changelog entry.
+
+To write proper release notes, I need to see the actual code changes (diffs) for these commits. Could you please provide the code diffs that show what was actually implemented in these commits?
+
 ## v0.3.5 (2026-04-20)
 
 I can see the commit message "5841e03 Personas" but no code diffs were provided in your input. Without the actual code changes, I cannot analyze what was implemented and write meaningful release notes.

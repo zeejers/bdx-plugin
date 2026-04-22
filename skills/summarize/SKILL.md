@@ -75,6 +75,9 @@ sessions:
 
 ## Verification
 <how the change was validated — tests run, manual checks, what was NOT verified>
+
+## Persona reviews
+<Appended in step 7. Per-persona blocks from `bdx.persona auto` over this summary, each under a `### <persona-name>` subheader, verbatim. Section is absent if no personas matched.>
 ```
 
 ## Rules
@@ -86,17 +89,22 @@ sessions:
 - **Keep it terse.** Handoff note, not a design doc — skimmable in under two minutes.
 - **Every cross-reference is a wikilink.** If you catch yourself writing `[text](path.md)` for a vault note, convert it.
 - **`private: false` by default.** Summaries are the strongest team-sync candidate — flip to `true` only for personal/side-project work. The sync layer honors the flag.
+- **Persona blocks are pasted verbatim.** When the persona pass returns output, paste it as-is — don't smooth contradictions between personas, don't pick a winner, don't rewrite into wikilink style. The voices and disagreements are the value. The summary's own sections still follow all the linking rules; the persona section is an exception.
 
 ## Process
 
 1. `mkdir -p "$AGENT_HOME/summary"`.
-2. Identify the bd-id: from `$ARGUMENTS`, the plan file name in conversation, or ask. If the work truly has no bd issue, set `bd: none` in frontmatter and skip step 7.
+2. Identify the bd-id: from `$ARGUMENTS`, the plan file name in conversation, or ask. If the work truly has no bd issue, set `bd: none` in frontmatter and skip step 8 (the bd comment cross-link).
 3. Decide the slug and final path; check for collisions.
 4. Read `$CLAUDE_SESSION_ID` (set by SessionStart hook). If empty, set `sessions: []`.
 5. Scan the conversation for: original request, plan, decisions, file changes, verification steps, unresolved items, related prior summaries/context dumps.
-6. Write the file using the template above, with wikilinks everywhere and `$CLAUDE_SESSION_ID` in `sessions:`.
-7. Cross-link back to beads: `bd comment <bd-id> "summary: $AGENT_HOME/summary/<slug>--<date>.md"` — makes the summary discoverable from `bd show`.
-8. Report the path back to the user in one line.
+6. Write the file using the template above, with wikilinks everywhere and `$CLAUDE_SESSION_ID` in `sessions:`. Do not include the `## Persona reviews` section yet — step 7 appends it if personas return output.
+7. **Persona pass.** Follow the `persona` skill's instructions inline with arguments `auto <full-path-to-just-written-summary>`. The persona skill returns per-persona blocks, or "no matching persona" with no output.
+   - If output was returned: `Edit` the file to append a `## Persona reviews` section at the end, with each persona's block under a `### <persona-name>` subheader, verbatim.
+   - If no persona matched: do nothing — the section stays absent. Do not block the summary on persona availability.
+   - Do not re-invoke a persona that already gave a take in this session's conversation — skip it to avoid duplicating output the user already saw.
+8. Cross-link back to beads: `bd comment <bd-id> "summary: $AGENT_HOME/summary/<slug>--<date>.md"` — makes the summary discoverable from `bd show`.
+9. Report the path back to the user in one line.
 
 ## When the work is done
 
