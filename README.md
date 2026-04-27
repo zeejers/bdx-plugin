@@ -51,7 +51,7 @@ curl -fsSL https://raw.githubusercontent.com/zeejers/bdx-plugin/refs/heads/main/
 Non-interactive (accepts defaults — `BEADS_DIR=~/.beads`, `AGENT_HOME=~/.bdx-agent`):
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/zeejers/bdx-plugin/main/scripts/install.sh | bash -s -- --yes
+curl -fsSL https://raw.githubusercontent.com/zeejers/bdx-plugin/refs/heads/main/scripts/install.sh | bash -s -- --yes
 ```
 
 Other flags: `--skip-bd`, `--skip-dolt`, `--skip-env`. Run `./scripts/install.sh --help` for the full list. Then install the Claude Code plugin (see [Install](#install) below).
