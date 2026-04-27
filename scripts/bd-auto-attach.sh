@@ -50,44 +50,31 @@ fi
 # Locate plan (1 per task by convention)
 PLAN=$(ls "$AGENT_HOME"/plan/"$BD_ID"-*.md 2>/dev/null | head -1)
 
-# Append session UUID to plan frontmatter (idempotent)
+# Append session UUID to plan frontmatter (idempotent).
+# POSIX awk — no python or yq dependency. Handles four cases:
+#   - sessions: with existing entries → append new uuid if not present
+#   - sessions: with new uuid already there → no-op (idempotent)
+#   - sessions: [] inline empty list → convert to multi-line + append
+#   - no sessions: key in frontmatter → inject the block before closing ---
+# Files without YAML frontmatter pass through unchanged.
 if [ -n "$PLAN" ] && [ -n "$SESSION_ID" ]; then
-  python3 - "$PLAN" "$SESSION_ID" <<'PY' || true
-import sys, re, pathlib
-path, sid = sys.argv[1], sys.argv[2]
-p = pathlib.Path(path)
-text = p.read_text()
-m = re.match(r'^---\n(.*?)\n---\n', text, re.S)
-if not m:
-    sys.exit(0)
-fm = m.group(1)
-lines = fm.split('\n')
-out, i, found, changed = [], 0, False, False
-while i < len(lines):
-    line = lines[i]
-    out.append(line)
-    if re.match(r'^sessions\s*:\s*$', line) or re.match(r'^sessions\s*:\s*\[\s*\]\s*$', line):
-        found = True
-        j = i + 1
-        entries = []
-        while j < len(lines) and re.match(r'^\s+-\s', lines[j]):
-            entries.append(lines[j])
-            j += 1
-        if not any(sid in e for e in entries):
-            entries.append(f"  - {sid}")
-            changed = True
-        out.extend(entries)
-        i = j
-        continue
-    i += 1
-if not found:
-    out.append("sessions:")
-    out.append(f"  - {sid}")
-    changed = True
-if changed:
-    new = "---\n" + "\n".join(out) + "\n---\n" + text[m.end():]
-    p.write_text(new)
-PY
+  awk -v sid="$SESSION_ID" '
+  BEGIN { in_fm=0; in_sessions=0; saw_sessions=0; sid_present=0 }
+  NR==1 && /^---[[:space:]]*$/ { in_fm=1; print; next }
+  in_fm && /^---[[:space:]]*$/ {
+    if (in_sessions && !sid_present) print "  - " sid
+    if (!saw_sessions) { print "sessions:"; print "  - " sid }
+    in_fm=0; in_sessions=0; print; next
+  }
+  in_fm && /^sessions:[[:space:]]*$/ { saw_sessions=1; in_sessions=1; print; next }
+  in_fm && /^sessions:[[:space:]]*\[\][[:space:]]*$/ { saw_sessions=1; print "sessions:"; in_sessions=1; next }
+  in_sessions && /^[[:space:]]+-/ { if (index($0, sid) > 0) sid_present=1; print; next }
+  in_sessions && /^[^[:space:]-]/ {
+    if (!sid_present) print "  - " sid
+    in_sessions=0; print; next
+  }
+  { print }
+  ' "$PLAN" > "$PLAN.tmp" && mv "$PLAN.tmp" "$PLAN" || rm -f "$PLAN.tmp"
 fi
 
 # Pick latest context + summary for this bd-id

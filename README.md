@@ -68,7 +68,8 @@ bdx couples every `bd` task to durable markdown — plans, mid-stream context du
 
 - `bd` (beads) CLI on `$PATH` — [gastownhall/beads](https://github.com/gastownhall/beads)
 - `dolt` on `$PATH` — beads' storage backend ([dolthub/dolt](https://github.com/dolthub/dolt))
-- `jq`, `python3` on `$PATH` (used by the auto-attach hook)
+- `jq` on `$PATH` (used by the auto-attach hook to parse `bd show --json`)
+- `bash` and POSIX `awk` (everywhere)
 
 The Quickstart script above handles `bd` and `dolt` for you.
 
@@ -92,6 +93,13 @@ export AGENT_HOME="$HOME/Dropbox/Notes/agent"
 ```
 
 The plugin hook respects whatever's set and only falls back to `~/.bdx-agent` when unset.
+
+### Optional: starter content
+
+Drop-in scaffolds live under [`examples/`](./examples/) — copy what you need, edit to taste:
+
+- [`examples/manifest.md`](./examples/manifest.md) → `$AGENT_HOME/manifest.md`. Sample project manifest used by `/bdx:plan` and `/bdx:scope` to validate project + component labels in monorepos. Plugin works without it; you'll just see "this repo isn't in the manifest" warnings on first plan.
+- [`examples/personas/`](./examples/personas/) → `$AGENT_HOME/personas/`. Example reviewer voices (DHH, Linus Torvalds) used by `/bdx:summarize` to attach per-persona reviews. Fully optional — with no personas installed, the persona section is simply absent from summaries.
 
 ## Install the Claude Code plugin
 
@@ -130,17 +138,19 @@ If you've overridden `AGENT_HOME` (e.g. `~/Dropbox/Notes/agent`), swap that path
 
 ## Usage
 
-Start a session attached to a bd task:
-```bash
-bdc bd-abc         # runs: BD_ID=bd-abc claude -n "bd-abc-<slug>"
-```
+A normal task lifecycle, end to end:
 
-Close a task (writes summary, then closes):
-```
-/bdx:close bd-abc
-```
+**1. Plan.** Chat with the agent for a while about what you want to build, then run `/bdx:plan` to plan from the discussion — or `/bdx:plan "feature I want to work on"` to plan from a one-liner. You get back a beads issue (e.g. `bd-abc`) plus a structured plan file at `$AGENT_HOME/plan/bd-abc-<slug>.md`.
 
-Override for the rare raw close:
+**2. Attach.** From any Claude session, run `/bdx:attach bd-abc`. The session loads the plan, every prior context dump, and the latest summary into turn-1 context — your agent picks up with full history of everything tagged with that bd-id in frontmatter.
+
+> From a fresh terminal: `bdc bd-abc` launches `claude` with the task already attached (sets `BD_ID`, the SessionStart hook does the rest). No `/bdx:attach` needed.
+
+**3. Dump.** Sign off fearlessly mid-session with `/bdx:dump`. A timestamped context snapshot lands in `$AGENT_HOME/context/` with the bd-id in its frontmatter. Next `/bdx:attach` pulls it in automatically alongside the plan and any other bd-id-tagged files.
+
+**4. Close.** Finish the work, then `/bdx:close bd-abc` writes a summary to `$AGENT_HOME/summary/`, attributes decisions to agent vs user, and closes the bd issue with a one-line resolution. The plugin's `PreToolUse` hook blocks bare `bd close` so you can't accidentally skip the writeup.
+
+Override for the rare raw close (e.g. closing an abandoned task without a summary):
 ```bash
 BDX_ALLOW_BARE_BD_CLOSE=1 bd close bd-abc
 ```
