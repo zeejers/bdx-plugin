@@ -6,6 +6,7 @@
 #   3. env         (BEADS_DIR + AGENT_HOME exports in your shell rc, with prompts)
 #   4. bd init     (initialize the global beads repo at $BEADS_DIR, shared-server)
 #   5. templates   (seed example manifest + DHH/Linus personas into $AGENT_HOME)
+#   6. perms       (merge bdx allowlist into ~/.claude/settings.json — touches ~/.claude/)
 #
 # Usage:
 #   bash <(curl -fsSL https://raw.githubusercontent.com/zeejers/bdx-plugin/refs/heads/development/scripts/install.sh)
@@ -17,6 +18,7 @@
 #   ./install.sh --skip-dolt      # skip dolt install
 #   ./install.sh --skip-init      # skip the bd init step
 #   ./install.sh --skip-templates # skip the manifest/personas seeding
+#   ./install.sh --skip-perms     # skip the Claude Code permissions allowlist
 #
 # Safe to re-run; everything is idempotent.
 
@@ -26,7 +28,7 @@ set -eu
 # parsing — necessary so `curl ... | bash` doesn't hang when prompts redirect
 # stdin to /dev/tty mid-execution. Same trick rustup / nvm / homebrew use.
 main() {
-  local YES=0 SKIP_ENV=0 SKIP_BD=0 SKIP_DOLT=0 SKIP_INIT=0 SKIP_TEMPLATES=0
+  local YES=0 SKIP_ENV=0 SKIP_BD=0 SKIP_DOLT=0 SKIP_INIT=0 SKIP_TEMPLATES=0 SKIP_PERMS=0
   for arg in "$@"; do
     case "$arg" in
       --yes|-y)         YES=1 ;;
@@ -35,7 +37,8 @@ main() {
       --skip-dolt)      SKIP_DOLT=1 ;;
       --skip-init)      SKIP_INIT=1 ;;
       --skip-templates) SKIP_TEMPLATES=1 ;;
-      --help|-h)        sed -n '2,21p' "${BASH_SOURCE[0]:-$0}" 2>/dev/null | sed 's/^# \{0,1\}//' || true; return 0 ;;
+      --skip-perms)     SKIP_PERMS=1 ;;
+      --help|-h)        sed -n '2,23p' "${BASH_SOURCE[0]:-$0}" 2>/dev/null | sed 's/^# \{0,1\}//' || true; return 0 ;;
       *) printf 'unknown flag: %s (try --help)\n' "$arg" >&2; return 2 ;;
     esac
   done
@@ -95,7 +98,7 @@ main() {
   fi
 
   # --- 1. bd (beads) -----------------------------------------------------
-  bold "1/5  beads (bd)"
+  bold "1/6  beads (bd)"
   if [ "$SKIP_BD" = 1 ]; then
     info "skipped (--skip-bd)"
   elif command -v bd >/dev/null 2>&1; then
@@ -117,7 +120,7 @@ main() {
   fi
 
   # --- 2. dolt -----------------------------------------------------------
-  bold "2/5  dolt"
+  bold "2/6  dolt"
   if [ "$SKIP_DOLT" = 1 ]; then
     info "skipped (--skip-dolt)"
   elif command -v dolt >/dev/null 2>&1; then
@@ -142,7 +145,7 @@ main() {
   fi
 
   # --- 3. shell profile env vars ----------------------------------------
-  bold "3/5  shell profile (BEADS_DIR, AGENT_HOME)"
+  bold "3/6  shell profile (BEADS_DIR, AGENT_HOME)"
   local rc shell_name chosen_beads_dir="" chosen_agent_home=""
   if [ "$SKIP_ENV" = 1 ]; then
     info "skipped (--skip-env)"
@@ -199,7 +202,7 @@ main() {
   # and let BEADS_DIR direct it to the global location. --database beads_global
   # uses the shared db that --shared-server provisions; --stealth keeps it
   # out of any per-repo git tracking; --quiet silences the wizard banners.
-  bold "4/5  bd init (global beads repo)"
+  bold "4/6  bd init (global beads repo)"
   if [ "$SKIP_INIT" = 1 ]; then
     info "skipped (--skip-init)"
   elif ! command -v bd >/dev/null 2>&1; then
@@ -243,7 +246,7 @@ main() {
   # /bdx:plan, /bdx:scope, and /bdx:summarize have starter content. Each
   # file is fetched independently and skipped if it already exists, so this
   # is safe to re-run and won't clobber user customizations.
-  bold "5/5  example manifest + personas (optional starter content)"
+  bold "5/6  example manifest + personas (optional starter content)"
   if [ "$SKIP_TEMPLATES" = 1 ]; then
     info "skipped (--skip-templates)"
   else
@@ -281,6 +284,56 @@ main() {
       else
         info "skipped — copy from examples/ in the repo when ready"
       fi
+    fi
+  fi
+
+  # --- 6. Claude Code permissions allowlist -----------------------------
+  # Merges the bdx allowlist into ~/.claude/settings.json so /bdx:* skills
+  # don't trigger a permission prompt every time they fire bd or write to
+  # $AGENT_HOME. Uses jq for a safe merge — existing entries are preserved
+  # and de-duplicated. AGENT_HOME path is rewritten to ~/... form so the
+  # config stays portable.
+  bold "6/6  Claude Code permissions allowlist (touches ~/.claude/)"
+  if [ "$SKIP_PERMS" = 1 ]; then
+    info "skipped (--skip-perms)"
+  elif ! command -v jq >/dev/null 2>&1; then
+    warn "jq not on PATH — skipping. Install jq and re-run, or copy the snippet from the README."
+  else
+    local target_ah="${AGENT_HOME:-${chosen_agent_home:-$HOME/.bdx-agent}}"
+    local ah_pattern="$target_ah"
+    # Rewrite $HOME prefix to ~ so the config doesn't bake in absolute paths.
+    if [[ "$target_ah" == "$HOME"/* ]] || [[ "$target_ah" == "$HOME" ]]; then
+      ah_pattern="~${target_ah#$HOME}"
+    fi
+    local settings_file="$HOME/.claude/settings.json"
+    info "destination: $settings_file"
+    info "adds:        Bash(bd:*), Read/Write/Edit($ah_pattern/**)"
+    info "(existing settings.json entries are preserved and de-duped)"
+    if ask_yn "Merge bdx allowlist into $settings_file?" Y; then
+      mkdir -p "$HOME/.claude"
+      local merge_jq='.permissions.allow = ((.permissions.allow // []) + [
+        "Bash(bd:*)",
+        "Read(\($ah)/**)",
+        "Write(\($ah)/**)",
+        "Edit(\($ah)/**)"
+      ] | unique)'
+      if [ -f "$settings_file" ]; then
+        if jq --arg ah "$ah_pattern" "$merge_jq" "$settings_file" > "$settings_file.tmp" 2>/dev/null; then
+          mv "$settings_file.tmp" "$settings_file"
+          ok "merged bdx allowlist into $settings_file"
+        else
+          rm -f "$settings_file.tmp"
+          warn "couldn't merge into $settings_file (invalid JSON?) — left untouched"
+        fi
+      else
+        if jq --arg ah "$ah_pattern" "$merge_jq" <<<'{}' > "$settings_file"; then
+          ok "wrote $settings_file with bdx allowlist"
+        else
+          warn "failed to write $settings_file"
+        fi
+      fi
+    else
+      info "skipped — copy the snippet from the README's 'Recommended: skip permission prompts' section when ready"
     fi
   fi
 

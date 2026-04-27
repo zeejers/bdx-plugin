@@ -134,7 +134,9 @@ Drop this into `~/.claude/settings.json` (or the project-level `.claude/settings
 }
 ```
 
-If you've overridden `AGENT_HOME` (e.g. `~/Dropbox/Notes/agent`), swap that path into the three `~/.bdx-agent/**` entries. The `Bash(bd:*)` line covers every bd subcommand; destructive `bd close` calls are still caught by the plugin's `PreToolUse` guard hook, so you don't lose the summary-first invariant.
+> Claude Code expands `~` to `$HOME` in `permissions.allow` paths, but **does not** expand shell env vars like `$AGENT_HOME` — those would be treated as literal strings. If you've overridden `AGENT_HOME` (e.g. `~/Dropbox/Notes/agent`), swap that path into the three `~/.bdx-agent/**` entries explicitly.
+
+The Quickstart installer (step 6/6) handles this for you — it resolves `$AGENT_HOME` at install time, rewrites the `$HOME` prefix to `~`, and merges the resulting allowlist into your `~/.claude/settings.json`. The `Bash(bd:*)` line covers every bd subcommand; destructive `bd close` calls are still caught by the plugin's `PreToolUse` guard hook, so you don't lose the summary-first invariant.
 
 ## Usage
 
