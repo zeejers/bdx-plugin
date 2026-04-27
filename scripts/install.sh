@@ -169,10 +169,14 @@ main() {
       ok "added $var=\"$val\" to $rc"
     }
 
-    if ask_yn "Add BEADS_DIR to your shell profile?" Y; then
-      chosen_beads_dir=$(ask_value "BEADS_DIR" "$HOME/.beads")
+    # BEADS_DIR is always ~/.beads — there's no good reason to vary it.
+    # The whole point of the global setup is one canonical, predictable location.
+    if ask_yn "Add 'export BEADS_DIR=~/.beads' to your shell profile?" Y; then
+      chosen_beads_dir="$HOME/.beads"
       add_export BEADS_DIR "$chosen_beads_dir"
     fi
+    # AGENT_HOME varies — users often point it at a synced path (Dropbox/iCloud)
+    # so plans + summaries follow them across machines. Keep the value prompt.
     if ask_yn "Add AGENT_HOME to your shell profile?" Y; then
       chosen_agent_home=$(ask_value "AGENT_HOME" "$HOME/.bdx-agent")
       add_export AGENT_HOME "$chosen_agent_home"
@@ -184,17 +188,25 @@ main() {
   if [ "$SKIP_INIT" = 1 ]; then
     info "skipped (--skip-init)"
   elif ! command -v bd >/dev/null 2>&1; then
-    warn "bd not on PATH — skipping init. Open a new shell and run 'cd \$BEADS_DIR && bd init' manually."
+    warn "bd not on PATH — skipping init. Open a new shell and run 'cd \$BEADS_DIR && bd init --prefix bd --shared-server' manually."
   else
     # Pick a target directory: env > what we just chose > default.
     local target="${BEADS_DIR:-${chosen_beads_dir:-$HOME/.beads}}"
     if [ -f "$target/beads.db" ] || [ -d "$target/.beads" ]; then
       ok "$target already initialized (found existing beads.db / .beads/)"
-    elif ask_yn "Initialize a global bd repo at $target?" Y; then
-      mkdir -p "$target"
-      ( cd "$target" && BEADS_DIR="$target" bd init ) && ok "initialized $target"
     else
-      info "skipped — run 'cd $target && bd init' when ready"
+      info "target path:    $target"
+      info "issue prefix:   bd  (issues will be ids like bd-a1b)"
+      info "server mode:    --shared-server (one dolt server for all projects)"
+      if ask_yn "Run bd init now with these settings?" Y; then
+        mkdir -p "$target"
+        if ( cd "$target" && BEADS_DIR="$target" bd init --prefix bd --shared-server --role maintainer --non-interactive ); then
+          ok "initialized $target"
+          info "to change the prefix later: bd config set issue-prefix <new>"
+        fi
+      else
+        info "skipped — run 'cd $target && bd init --prefix bd --shared-server' when ready"
+      fi
     fi
   fi
 

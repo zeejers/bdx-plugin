@@ -54,7 +54,17 @@ Non-interactive (accepts defaults — `BEADS_DIR=~/.beads`, `AGENT_HOME=~/.bdx-a
 curl -fsSL https://raw.githubusercontent.com/zeejers/bdx-plugin/refs/heads/development/scripts/install.sh | bash -s -- --yes
 ```
 
-Other flags: `--skip-bd`, `--skip-dolt`, `--skip-env`. Run `./scripts/install.sh --help` for the full list. Then install the Claude Code plugin (see [Install](#install) below).
+Other flags: `--skip-bd`, `--skip-dolt`, `--skip-env`, `--skip-init`. Run `./scripts/install.sh --help` for the full list. Then install the Claude Code plugin (see [Install](#install) below).
+
+### Uninstall
+
+Reverses the install. Prompts on every teardown step; destructive ops (deleting `$BEADS_DIR` / `$AGENT_HOME`) default to *no*. Does **not** touch your shell profile — those exports stay until you remove them by hand.
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/zeejers/bdx-plugin/refs/heads/development/scripts/uninstall.sh)
+```
+
+`--dry-run` shows what would be removed without touching anything.
 
 ## Prerequisites
 
