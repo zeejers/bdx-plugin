@@ -40,10 +40,29 @@ Everything lives as markdown with `bd-<id>` frontmatter and wikilink cross-refer
 ### Launcher
 - `scripts/bdc` — `bdc <bd-id>` sets `BD_ID`, derives a slug from the bd title, and runs `claude -n "<bd-id>-<slug>"`. Symlink to `~/bin/bdc` or alias it.
 
+## Quickstart
+
+Bootstraps `bd` (beads), `dolt`, and the `BEADS_DIR` / `AGENT_HOME` exports in your shell profile in one shot. Safe to re-run; skips anything already installed.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/zeejers/bdx-plugin/main/scripts/install.sh | bash
+```
+
+Non-interactive (accepts defaults — `BEADS_DIR=~/.beads`, `AGENT_HOME=~/.bdx-agent`):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/zeejers/bdx-plugin/main/scripts/install.sh | bash -s -- --yes
+```
+
+Other flags: `--skip-bd`, `--skip-dolt`, `--skip-env`. Run `./scripts/install.sh --help` for the full list. Then install the Claude Code plugin (see [Install](#install) below).
+
 ## Prerequisites
 
 - `bd` (beads) CLI on `$PATH` — [gastownhall/beads](https://github.com/gastownhall/beads)
+- `dolt` on `$PATH` — beads' storage backend ([dolthub/dolt](https://github.com/dolthub/dolt))
 - `jq`, `python3` on `$PATH` (used by the auto-attach hook)
+
+The Quickstart script above handles `bd` and `dolt` for you.
 
 ## `$AGENT_HOME`
 
@@ -120,3 +139,21 @@ BDX_ALLOW_BARE_BD_CLOSE=1 bd close bd-abc
 
 - `BD_ID` unset → SessionStart hook is a silent no-op; normal `claude` invocations are unaffected
 - `BDX_ALLOW_BARE_BD_CLOSE=1` → bypass the `bd close` guard for one command
+
+## FAQ
+
+### Why am I installing dolt for an issue tracker?
+
+You're not, really — you're installing it for `bd`. [Beads](https://github.com/gastownhall/beads) is the issue tracker; it ships with [Dolt](https://github.com/dolthub/dolt) as its storage backend. Dolt is a SQL database with git-style branching, merging, and history. That's not overkill once you see what beads does with it: every issue mutation is a versioned change you can branch, diff, and three-way-merge — the same way you handle code.
+
+For bdx specifically, that backend is what makes the rest of the workflow work. Tasks, comments, and status transitions persist across sessions, machines, and branches. Hook one shared dolt server up to a single `$BEADS_DIR`, sync `$AGENT_HOME` via Dropbox/iCloud, and your agents have a real persistence layer — not a chat log, not a markdown TODO, not a per-repo SQLite that fragments the moment you `cd` somewhere else. Beads is well-established and battle-tested; bdx just sits on top and couples each task to a durable markdown notebook.
+
+If `dolt` weren't part of `bd`, the bdx workflow wouldn't be able to keep agent context coherent across sessions. So the installer takes both.
+
+### Do I need a separate dolt server running?
+
+`bd` auto-starts one transparently in the background the first time it needs it. You can run `bd dolt status` to see it. The default mode is "shared server" — one `dolt sql-server` process serves every project on the machine, listening on a local port. If you set `BEADS_DIR` globally (the bdx-recommended setup), there's exactly one beads database for everything you do.
+
+### Can I skip dolt and use SQLite?
+
+Beads has a `no-db` JSONL-only mode (set `no-db: true` in `~/.beads/config.yaml`), but you lose the branchable history that makes the agent persistence story work. The installer's `--skip-dolt` flag exists if you want to go down that path; bdx itself doesn't care about the storage layer, only that `bd` works.

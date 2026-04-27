@@ -1,3 +1,21 @@
+## v0.5.0 (2026-04-25)
+
+Based on the provided git commits, I cannot generate a meaningful changelog entry. 
+
+The only commit shown is:
+```
+d8897b9 release v0.5.0
+```
+
+This appears to be a release tag commit with no accompanying code diffs or detailed commit messages that would indicate what features, bug fixes, or improvements were actually implemented.
+
+To write an accurate changelog entry following the specified rules, I would need:
+- Code diffs showing the actual changes made
+- More detailed commit messages describing the work done
+- Additional commits leading up to this release
+
+Without this information, I cannot determine what was actually built or changed in version 0.5.0.
+
 ## v0.4.0 (2026-04-22)
 
 I can see the commit messages you've provided:

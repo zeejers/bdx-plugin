@@ -99,7 +99,13 @@ sessions:
 4. Read `$CLAUDE_SESSION_ID` (set by SessionStart hook). If empty, set `sessions: []`.
 5. Scan the conversation for: original request, plan, decisions, file changes, verification steps, unresolved items, related prior summaries/context dumps.
 6. Write the file using the template above, with wikilinks everywhere and `$CLAUDE_SESSION_ID` in `sessions:`. Do not include the `## Persona reviews` section yet — step 7 appends it if personas return output.
-7. **Persona pass.** Follow the `persona` skill's instructions inline with arguments `auto <full-path-to-just-written-summary>`. The persona skill returns per-persona blocks, or "no matching persona" with no output.
+7. **Persona pass.** Follow the `persona` skill's instructions inline with the following free-form prompt as `$ARGUMENTS` (substitute the real path):
+
+   ```
+   auto You are about to critique an implementation that was just shipped. The full writeup — what was built, files touched, key decisions, tradeoffs, what's verified, what's deferred — is at <full-path-to-just-written-summary>. Read it as evidence about the work and react to the work itself: the decisions, the scope, the approach, what was skipped or stubbed, what looks load-bearing vs. fragile. You are NOT reviewing the prose of the summary document — do not edit its wording, structure, or word choice. The summary is the lens onto the implementation; the implementation is the target.
+   ```
+
+   The persona skill's free-form path will pass this through verbatim so the selected personas know the summary file is *evidence about the work*, not the artifact under review. The persona skill returns per-persona blocks, or "no matching persona" with no output.
    - If output was returned: `Edit` the file to append a `## Persona reviews` section at the end, with each persona's block under a `### <persona-name>` subheader, verbatim.
    - If no persona matched: do nothing — the section stays absent. Do not block the summary on persona availability.
    - Do not re-invoke a persona that already gave a take in this session's conversation — skip it to avoid duplicating output the user already saw.
