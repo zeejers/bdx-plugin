@@ -210,17 +210,27 @@ main() {
       ok "$target already initialized (found existing beads.db / .beads/)"
     else
       info "target path: $target"
-      info "flags:       --quiet --stealth --role maintainer"
+      info "flags:       --quiet --stealth (role pre-set via git config)"
       if ask_yn "Run bd init now with these settings?" Y; then
         mkdir -p "$target"
-        if ( cd "$HOME" && BEADS_DIR="$target" bd init --quiet --stealth --role maintainer ); then
-          ok "initialized $target"
+        # Lock down to owner-only — BEADS_DIR holds credentials + dolt data.
+        # Done before bd init so the dir's mode is correct from creation.
+        chmod 700 "$target"
+        # Pre-set the maintainer role in global git config. bd init's --role
+        # flag only applies inside a git repo (isGitRepo() guard); at $HOME
+        # without a repo, the role wizard would fire even with --role passed.
+        # Setting beads.role in ~/.gitconfig makes bd pick it up regardless.
+        if command -v git >/dev/null 2>&1; then
+          git config --global beads.role maintainer 2>/dev/null || true
+        fi
+        if ( cd "$HOME" && BEADS_DIR="$target" bd init --quiet --stealth ); then
+          ok "initialized $target (mode 700)"
           info "to change the prefix later: bd config set issue-prefix <new>"
         else
-          warn "bd init failed — re-run with: cd \$HOME && BEADS_DIR=$target bd init --quiet --stealth --role maintainer"
+          warn "bd init failed — re-run with: git config --global beads.role maintainer && cd \$HOME && BEADS_DIR=$target bd init --quiet --stealth"
         fi
       else
-        info "skipped — run from \$HOME with: BEADS_DIR=$target bd init --quiet --stealth --role maintainer"
+        info "skipped — run: git config --global beads.role maintainer && cd \$HOME && BEADS_DIR=$target bd init --quiet --stealth"
       fi
     fi
   fi
