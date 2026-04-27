@@ -6,8 +6,8 @@
 # hand). Defaults are conservative: destructive ops default to "no".
 #
 # Usage:
-#   bash <(curl -fsSL https://raw.githubusercontent.com/zeejers/bdx-plugin/main/scripts/uninstall.sh)
-#   curl -fsSL https://raw.githubusercontent.com/zeejers/bdx-plugin/main/scripts/uninstall.sh | bash
+#   bash <(curl -fsSL https://raw.githubusercontent.com/zeejers/bdx-plugin/refs/heads/development/scripts/uninstall.sh)
+#   curl -fsSL https://raw.githubusercontent.com/zeejers/bdx-plugin/refs/heads/development/scripts/uninstall.sh | bash
 #   ./uninstall.sh                # interactive
 #   ./uninstall.sh --yes          # accept the default at every prompt (binaries: yes, data: no)
 #   ./uninstall.sh --dry-run      # print what would be removed; touch nothing

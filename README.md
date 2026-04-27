@@ -96,7 +96,7 @@ The plugin hook respects whatever's set and only falls back to `~/.bdx-agent` wh
 
 ### Optional: starter content
 
-Drop-in scaffolds live under [`examples/`](./examples/) — copy what you need, edit to taste:
+The Quickstart installer offers to seed these for you (step 5/5). To do it manually, drop-in scaffolds live under [`examples/`](./examples/) — copy what you need, edit to taste:
 
 - [`examples/manifest.md`](./examples/manifest.md) → `$AGENT_HOME/manifest.md`. Sample project manifest used by `/bdx:plan` and `/bdx:scope` to validate project + component labels in monorepos. Plugin works without it; you'll just see "this repo isn't in the manifest" warnings on first plan.
 - [`examples/personas/`](./examples/personas/) → `$AGENT_HOME/personas/`. Example reviewer voices (DHH, Linus Torvalds) used by `/bdx:summarize` to attach per-persona reviews. Fully optional — with no personas installed, the persona section is simply absent from summaries.

@@ -1,3 +1,22 @@
+## v0.5.2 (2026-04-27)
+
+Based on the commit messages provided, here is the changelog entry:
+
+### ✨ Features
+- [commits] Added claude plugin command functionality
+- [commits] Added install/uninstall capability
+
+### 🐛 Bug Fixes
+- [commits] Fixed installer implementation
+- [commits] Corrected install script location
+
+### 🛠️ Improvements
+- [commits] Removed Python dependency
+- [commits] Updated documentation (readme)
+- [commits] Added install link functionality
+
+**Note: This changelog is based solely on commit messages as no code diffs were provided. For more detailed and accurate release notes, code diffs would be needed to understand the actual implementation details.**
+
 ## v0.5.0 (2026-04-27)
 
 I can see the commit message indicates an installation script was added and documentation was updated, but no code diffs were provided in your input. 
