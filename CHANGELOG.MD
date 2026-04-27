@@ -1,3 +1,20 @@
+## v0.5.6 (2026-04-27)
+
+Based on the provided git commits, I cannot generate a meaningful changelog entry. The only commit shown is:
+
+```
+e6e75b6 release v0.5.6
+```
+
+This appears to be just a version bump commit with no accompanying code diffs or detailed commit messages that would indicate what features, bug fixes, or improvements were actually implemented.
+
+To write an accurate changelog, I would need:
+- Code diffs showing the actual changes made
+- More descriptive commit messages explaining what was modified
+- Details about the specific functions, components, or capabilities that were added or changed
+
+Without this information, I cannot provide the requested changelog sections as it would require making up features rather than describing what the actual code does.
+
 ## v0.5.5 (2026-04-27)
 
 I can see the commit message "installer fixes" but no code diffs were provided. Without the actual code changes, I cannot write a meaningful changelog entry that follows the rules of describing what the actual code does.
