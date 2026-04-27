@@ -1,18 +1,42 @@
 # bdx
 
+**TL;DR** — every Claude Code session writes a markdown plan/summary keyed by `bd` issue. The session ends; the record stays.
+
 > **Couples bd tasks to a durable markdown notebook at every lifecycle event (create → attach → dump → summarize → close). `bd` is the source of truth for task state; markdown is the narrative record.**
 
-Claude Code plugin for the [`bd` (beads)](https://github.com/gastownhall/beads) issue tracker. Turns bd into a session-aware task system: every task is born with a plan file, every session resuming a task gets pre-loaded with full context, and nothing closes without a written summary.
+![Claude Code](https://img.shields.io/badge/Claude_Code-plugin-D97757?logo=anthropic&logoColor=white) ![beads](https://img.shields.io/badge/beads-task_glue-9333EA) ![dolt](https://img.shields.io/badge/dolt-versioned_storage-1E40AF) ![status](https://img.shields.io/badge/status-experimental-yellow)
 
-## Why I built this
+Claude Code plugin for the [`bd` (beads)](https://github.com/gastownhall/beads) issue tracker. Every task gets a plan file. Every session resuming a task pre-loads with full context. Nothing closes without a written summary.
 
-I wanted to see what my agents were working on through beads, but I also wanted everything they were thinking — plans, mid-stream context, final summaries — persisted to disk, not locked inside ephemeral Claude sessions.
+## Quickstart
 
-The thing I care about most is **drift**. What did the plan say at the start, what did the implementation actually become, what decisions got made along the way and why? When you're pairing with an agent, those details evaporate the moment the session ends. Without a markdown record, you have the code and nothing else — no rationale, no alternatives considered, no "we tried X but backed out because Y."
+Bootstraps `bd`, `dolt`, and `BEADS_DIR` / `AGENT_HOME` in one shot. Safe to re-run; skips anything already installed.
 
-I also wanted to close sessions **without fear**. A running session holds a lot of working memory; dumping it to disk first means I can end cleanly and pick up later from the notebook, not from scratch.
+```bash
+curl -fsSL https://raw.githubusercontent.com/zeejers/bdx-plugin/refs/heads/development/scripts/install.sh | bash
+```
 
-Everything lives as markdown with `bd-<id>` frontmatter and wikilink cross-references, which means you get [Obsidian graph view](https://help.obsidian.md/Plugins/Graph+view) for free — plans, summaries, and context dumps all show up as nodes, and over time you can see how tasks, decisions, and knowledge correlate across projects.
+Then install the Claude Code plugin:
+
+```bash
+claude plugin marketplace add zeejers/bdx-plugin && claude plugin install bdx@bdx-marketplace
+```
+
+Non-interactive variant + flags: see [Install the Claude Code plugin](#install-the-claude-code-plugin) below and `./scripts/install.sh --help`.
+
+### Uninstall
+
+Reverses everything except your shell profile (those exports stay until you remove them by hand). Destructive ops default to *no*; `--dry-run` previews.
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/zeejers/bdx-plugin/refs/heads/development/scripts/uninstall.sh)
+```
+
+## Why this exists
+
+A running agent session holds a lot of working memory — what the plan said, what got tried, what was rejected and why. The moment the session ends, all of that evaporates. You're left with the diff and nothing else.
+
+bdx couples every `bd` task to durable markdown — plans, mid-stream context dumps, summaries — keyed by bd-id with frontmatter and wikilinks. Sessions resume with full context loaded; nothing closes without a written record. The markdown lives in `$AGENT_HOME` so [Obsidian graph view](https://help.obsidian.md/Plugins/Graph+view) shows how tasks, decisions, and knowledge correlate across projects.
 
 ## What's in the box
 
@@ -39,32 +63,6 @@ Everything lives as markdown with `bd-<id>` frontmatter and wikilink cross-refer
 
 ### Launcher
 - `scripts/bdc` — `bdc <bd-id>` sets `BD_ID`, derives a slug from the bd title, and runs `claude -n "<bd-id>-<slug>"`. Symlink to `~/bin/bdc` or alias it.
-
-## Quickstart
-
-Bootstraps `bd` (beads), `dolt`, and the `BEADS_DIR` / `AGENT_HOME` exports in your shell profile in one shot. Safe to re-run; skips anything already installed.
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/zeejers/bdx-plugin/refs/heads/development/scripts/install.sh | bash
-```
-
-Non-interactive (accepts defaults — `BEADS_DIR=~/.beads`, `AGENT_HOME=~/.bdx-agent`):
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/zeejers/bdx-plugin/refs/heads/development/scripts/install.sh | bash -s -- --yes
-```
-
-Other flags: `--skip-bd`, `--skip-dolt`, `--skip-env`, `--skip-init`. Run `./scripts/install.sh --help` for the full list. Then install the Claude Code plugin (see [Install](#install) below).
-
-### Uninstall
-
-Reverses the install. Prompts on every teardown step; destructive ops (deleting `$BEADS_DIR` / `$AGENT_HOME`) default to *no*. Does **not** touch your shell profile — those exports stay until you remove them by hand.
-
-```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/zeejers/bdx-plugin/refs/heads/development/scripts/uninstall.sh)
-```
-
-`--dry-run` shows what would be removed without touching anything.
 
 ## Prerequisites
 
@@ -95,16 +93,18 @@ export AGENT_HOME="$HOME/Dropbox/Notes/agent"
 
 The plugin hook respects whatever's set and only falls back to `~/.bdx-agent` when unset.
 
-## Install
+## Install the Claude Code plugin
 
-**Local dev** (symlink approach, easiest to iterate):
+**One-liner:**
 ```bash
-claude --plugin-dir ~/src/github.com/bdx-plugin
+claude plugin marketplace add zeejers/bdx-plugin && claude plugin install bdx@bdx-marketplace
 ```
 
-**Via marketplace** (once published):
+The marketplace and plugin names (`bdx-marketplace`, `bdx`) are defined in [`.claude-plugin/marketplace.json`](./.claude-plugin/marketplace.json) — they're not the repo name. Changes activate on the next `claude` session; if you're already in one, run `/reload-plugins`.
+
+**Local dev** (symlink approach, easiest to iterate on the plugin itself):
 ```bash
-claude plugin install bdx@<marketplace>
+claude --plugin-dir ~/src/github.com/bdx-plugin
 ```
 
 ## Recommended: skip permission prompts for bdx
