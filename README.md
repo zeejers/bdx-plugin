@@ -45,7 +45,7 @@ Everything lives as markdown with `bd-<id>` frontmatter and wikilink cross-refer
 Bootstraps `bd` (beads), `dolt`, and the `BEADS_DIR` / `AGENT_HOME` exports in your shell profile in one shot. Safe to re-run; skips anything already installed.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/zeejers/bdx-plugin/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/zeejers/bdx-plugin/refs/heads/main/scripts/install.sh | bash
 ```
 
 Non-interactive (accepts defaults — `BEADS_DIR=~/.beads`, `AGENT_HOME=~/.bdx-agent`):
