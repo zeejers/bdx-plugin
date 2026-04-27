@@ -209,28 +209,18 @@ main() {
     if [ -f "$target/beads.db" ] || [ -d "$target/.beads" ]; then
       ok "$target already initialized (found existing beads.db / .beads/)"
     else
-      info "target path:    $target"
-      info "issue prefix:   bd  (issues will be ids like bd-a1b)"
-      info "server mode:    --shared-server (one dolt server for all projects)"
-      info "database:       beads_global (shared across every project)"
-      info "noise control:  --skip-agents --skip-hooks (no AGENTS.md / CLAUDE.md / git hooks)"
+      info "target path: $target"
+      info "flags:       --quiet --stealth --role maintainer"
       if ask_yn "Run bd init now with these settings?" Y; then
         mkdir -p "$target"
-        if ( cd "$HOME" && BEADS_DIR="$target" bd init \
-              --shared-server \
-              --database beads_global \
-              --prefix bd \
-              --non-interactive \
-              --skip-agents \
-              --skip-hooks \
-              --quiet ); then
+        if ( cd "$HOME" && BEADS_DIR="$target" bd init --quiet --stealth --role maintainer ); then
           ok "initialized $target"
           info "to change the prefix later: bd config set issue-prefix <new>"
         else
-          warn "bd init failed — re-run with: cd \$HOME && BEADS_DIR=$target bd init --shared-server --database beads_global --prefix bd --non-interactive --skip-agents --skip-hooks --quiet"
+          warn "bd init failed — re-run with: cd \$HOME && BEADS_DIR=$target bd init --quiet --stealth --role maintainer"
         fi
       else
-        info "skipped — run from \$HOME with: BEADS_DIR=$target bd init --shared-server --database beads_global --prefix bd --non-interactive --skip-agents --skip-hooks --quiet"
+        info "skipped — run from \$HOME with: BEADS_DIR=$target bd init --quiet --stealth --role maintainer"
       fi
     fi
   fi

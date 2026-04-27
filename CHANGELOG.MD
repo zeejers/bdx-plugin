@@ -1,3 +1,27 @@
+## v0.5.4 (2026-04-27)
+
+I can see the commit messages but no code diffs were provided. Based on only the commit messages available, here's what I can determine:
+
+### 🐛 Bug Fixes
+- [commits] Fixed issues in install script (ed364d2)
+- [commits] Resolved installation-related problems (c33cd82)
+
+### 🛠️ Improvements
+- [commits] Added manifest example (f1ae67f)
+
+Note: To provide more specific details about the actual code changes, function names, and components affected, the code diffs for these commits would need to be included in the analysis.
+
+## v0.5.3 (2026-04-27)
+
+I can only see the commit messages you provided, but no actual code diffs. Based solely on the commit messages, I cannot write a detailed changelog since I don't have visibility into what the code actually does.
+
+The commit messages reference:
+- c33cd82 install fixes
+- f1ae67f Manifest example  
+- ed364d2 Fix install script
+
+To write an accurate changelog following your rules, I would need to see the actual code diffs for these commits. Could you please provide the code diffs so I can analyze what was actually changed and write proper release notes based on the implementation details?
+
 ## v0.5.2 (2026-04-27)
 
 Based on the commit messages provided, here is the changelog entry:
