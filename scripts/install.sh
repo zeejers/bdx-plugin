@@ -213,23 +213,24 @@ main() {
       info "issue prefix:   bd  (issues will be ids like bd-a1b)"
       info "server mode:    --shared-server (one dolt server for all projects)"
       info "database:       beads_global (shared across every project)"
+      info "noise control:  --skip-agents --skip-hooks (no AGENTS.md / CLAUDE.md / git hooks)"
       if ask_yn "Run bd init now with these settings?" Y; then
         mkdir -p "$target"
         if ( cd "$HOME" && BEADS_DIR="$target" bd init \
               --shared-server \
               --database beads_global \
               --prefix bd \
-              --role maintainer \
               --non-interactive \
-              --quiet \
-              --stealth ); then
+              --skip-agents \
+              --skip-hooks \
+              --quiet ); then
           ok "initialized $target"
           info "to change the prefix later: bd config set issue-prefix <new>"
         else
-          warn "bd init failed — re-run with: cd \$HOME && BEADS_DIR=$target bd init --shared-server --database beads_global --prefix bd --stealth"
+          warn "bd init failed — re-run with: cd \$HOME && BEADS_DIR=$target bd init --shared-server --database beads_global --prefix bd --non-interactive --skip-agents --skip-hooks --quiet"
         fi
       else
-        info "skipped — run from \$HOME with: BEADS_DIR=$target bd init --shared-server --database beads_global --prefix bd --stealth"
+        info "skipped — run from \$HOME with: BEADS_DIR=$target bd init --shared-server --database beads_global --prefix bd --non-interactive --skip-agents --skip-hooks --quiet"
       fi
     fi
   fi
