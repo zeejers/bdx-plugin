@@ -37,11 +37,3 @@ Drop this file at `$AGENT_HOME/manifest.md` and edit it to taste. Skills don't w
 - **notes**: anything skills should know — build system, deploy target, conventions, gotchas. Free-form.
 
 ---
-
-## example-single-package
-
-- **slug**: `example-single-package`
-- **path**: `~/src/github.com/your-org/example-single-package`
-- **repo**: git@github.com:your-org/example-single-package.git
-- **type**: single-package
-- **notes**: For single-package projects, omit the `components:` block — the project label alone is enough.

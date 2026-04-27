@@ -172,15 +172,23 @@ main() {
       ok "added $var=\"$val\" to $rc"
     }
 
-    # BEADS_DIR is always ~/.beads — there's no good reason to vary it.
-    # The whole point of the global setup is one canonical, predictable location.
-    if ask_yn "Add 'export BEADS_DIR=~/.beads' to your shell profile?" Y; then
+    # BEADS_DIR — always ~/.beads when we set it. Skip the prompt entirely if
+    # the user already has BEADS_DIR exported (synced from another machine,
+    # configured manually, etc) — they've already made the choice and a
+    # different path is the most likely reason it's set.
+    if [ -n "${BEADS_DIR:-}" ]; then
+      ok "BEADS_DIR already set in env: $BEADS_DIR — using existing"
+      chosen_beads_dir="$BEADS_DIR"
+    elif ask_yn "Add 'export BEADS_DIR=~/.beads' to your shell profile?" Y; then
       chosen_beads_dir="$HOME/.beads"
       add_export BEADS_DIR "$chosen_beads_dir"
     fi
-    # AGENT_HOME varies — users often point it at a synced path (Dropbox/iCloud)
-    # so plans + summaries follow them across machines. Keep the value prompt.
-    if ask_yn "Add AGENT_HOME to your shell profile?" Y; then
+    # AGENT_HOME — same detection. If the user has it set (commonly to a
+    # synced path like ~/Dropbox/Notes/agent), honor that and skip the prompt.
+    if [ -n "${AGENT_HOME:-}" ]; then
+      ok "AGENT_HOME already set in env: $AGENT_HOME — using existing"
+      chosen_agent_home="$AGENT_HOME"
+    elif ask_yn "Add AGENT_HOME to your shell profile?" Y; then
       chosen_agent_home=$(ask_value "AGENT_HOME" "$HOME/.bdx-agent")
       add_export AGENT_HOME "$chosen_agent_home"
     fi
