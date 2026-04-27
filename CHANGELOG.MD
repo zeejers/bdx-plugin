@@ -1,3 +1,15 @@
+## v0.5.0 (2026-04-27)
+
+I can see the commit message indicates an installation script was added and documentation was updated, but no code diffs were provided in your input. 
+
+Based solely on the commit information available:
+
+### ✨ Features
+- [commits] Add installation script
+- [commits] Update documentation
+
+**Note**: Without the actual code diffs, I cannot provide more specific details about what the installation script does, which files were modified, or what documentation changes were made. Please provide the code diffs for a more detailed and accurate changelog.
+
 ## v0.5.0 (2026-04-25)
 
 Based on the provided git commits, I cannot generate a meaningful changelog entry. 
