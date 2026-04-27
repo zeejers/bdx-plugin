@@ -1,3 +1,14 @@
+## v0.5.5 (2026-04-27)
+
+I can see the commit message "installer fixes" but no code diffs were provided. Without the actual code changes, I cannot write a meaningful changelog entry that follows the rules of describing what the actual code does.
+
+To write proper release notes, I would need to see the code diffs that show:
+- What specific files were changed
+- What lines of code were added, removed, or modified
+- What functions, components, or logic were affected
+
+Could you please provide the code diffs for commit 4d82632 so I can analyze the actual changes and write an accurate changelog entry?
+
 ## v0.5.4 (2026-04-27)
 
 I can see the commit messages but no code diffs were provided. Based on only the commit messages available, here's what I can determine:

@@ -1,6 +1,6 @@
 {
   "name": "bdx",
-  "version": "0.5.6",
+  "version": "0.5.7",
   "description": "Beads workflow skills + hooks: auto-attach sessions to bd tasks, enforce summary-before-close, and bundle the bd.* task lifecycle skills (plan, attach, dump, summarize, close, label, scope, triage, manifest).",
   "author": {
     "name": "Zach Sherbondy"

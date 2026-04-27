@@ -209,8 +209,9 @@ main() {
     if [ -f "$target/beads.db" ] || [ -d "$target/.beads" ]; then
       ok "$target already initialized (found existing beads.db / .beads/)"
     else
-      info "target path: $target"
-      info "flags:       --quiet --stealth (role pre-set via git config)"
+      info "target path:   $target"
+      info "issue prefix:  bd  (issues will be ids like bd-a1b)"
+      info "flags:         --prefix bd --quiet --stealth (role pre-set via git config)"
       if ask_yn "Run bd init now with these settings?" Y; then
         mkdir -p "$target"
         # Lock down to owner-only — BEADS_DIR holds credentials + dolt data.
@@ -223,14 +224,16 @@ main() {
         if command -v git >/dev/null 2>&1; then
           git config --global beads.role maintainer 2>/dev/null || true
         fi
-        if ( cd "$HOME" && BEADS_DIR="$target" bd init --quiet --stealth ); then
+        # --prefix bd is required: without it, bd derives the prefix from
+        # cwd basename, which becomes the user's name when run from $HOME.
+        if ( cd "$HOME" && BEADS_DIR="$target" bd init --prefix bd --quiet --stealth ); then
           ok "initialized $target (mode 700)"
           info "to change the prefix later: bd config set issue-prefix <new>"
         else
-          warn "bd init failed — re-run with: git config --global beads.role maintainer && cd \$HOME && BEADS_DIR=$target bd init --quiet --stealth"
+          warn "bd init failed — re-run with: git config --global beads.role maintainer && cd \$HOME && BEADS_DIR=$target bd init --prefix bd --quiet --stealth"
         fi
       else
-        info "skipped — run: git config --global beads.role maintainer && cd \$HOME && BEADS_DIR=$target bd init --quiet --stealth"
+        info "skipped — run: git config --global beads.role maintainer && cd \$HOME && BEADS_DIR=$target bd init --prefix bd --quiet --stealth"
       fi
     fi
   fi
