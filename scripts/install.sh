@@ -214,7 +214,8 @@ main() {
   if [ "$SKIP_ENV" = 0 ]; then
     info "open a new shell (or 'source ${rc:-<your shell rc>}') to pick up env changes"
   fi
-  info "next: install the bdx Claude Code plugin — see README.md"
+  info "next: install the bdx Claude Code plugin —"
+  info "      claude plugin marketplace add zeejers/bdx-plugin && claude plugin install bdx@bdx-marketplace"
 }
 
 main "$@"
