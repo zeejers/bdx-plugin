@@ -14,7 +14,8 @@ This is a broader, lossier snapshot than `summarize` — it captures conversatio
 Write to: `$AGENT_HOME/context/<label>--<YYYY-MM-DD>-<HHMM>.md`
 
 Naming convention:
-- `<label>`: short, kebab-case, lowercase, no spaces — describes the *session topic* (e.g. `debugging-ingest-backpressure`). Derived from `$ARGUMENTS` if provided.
+
+- `<label>`: short, kebab-case, lowercase, no spaces — describes the _session topic_ (e.g. `debugging-ingest-backpressure`). Derived from `$ARGUMENTS` if provided.
 - `--` (double dash) separates the label from the timestamp so labels containing numbers/dates stay unambiguous.
 - `<YYYY-MM-DD>-<HHMM>`: ISO date plus 24h local time, zero-padded (e.g. `2026-04-16-1430`). Context dumps happen multiple times per day, so the time is mandatory.
 - Create `context/` if it doesn't exist.
@@ -24,7 +25,7 @@ Naming convention:
 ## Linking rules (critical for Obsidian graph view)
 
 - **All in-vault references are wikilinks**: `[[note-name]]` or `[[note-name|display]]`. Never use `[text](path.md)` for anything inside `$AGENT_HOME`.
-- **Link files as wikilinks** — e.g. ``[[src/jobs/ingest.ts]]``. Unresolved wikilinks still appear in the graph and cluster by name, which is what we want.
+- **Link files as wikilinks** — e.g. `[[src/jobs/ingest.ts]]`. Unresolved wikilinks still appear in the graph and cluster by name, which is what we want.
 - **Link concepts** as `[[concept/<idea>]]` (e.g. `[[concept/backpressure]]`, `[[concept/rbac]]`) so repeated ideas become hub nodes.
 - **Link tickets / PRs** as `[[INGEST-482]]`, `[[PR-1234]]`.
 - **Link related summaries or prior dumps** as `[[summary/<slug>--<YYYY-MM-DD>]]` or `[[context/<label>--<YYYY-MM-DD>-<HHMM>]]` — this is what lets graph view show trails across sessions.
@@ -36,15 +37,15 @@ Naming convention:
 
 ```markdown
 ---
-bd: bd-xxx   # or "none" if this dump isn't tied to a specific beads issue
+bd: bd-xxx # or "none" if this dump isn't tied to a specific beads issue
 label: <label>
-dumped_at: <ISO timestamp>
+created: <YYYY-MM-DD>
 cwd: <current working directory>
 aliases: []
 tags: [context, <project-or-area>]
-private: false   # true = personal/side-project, skip team sync
+private: false # true = personal/side-project, skip team sync
 sessions:
-  - <uuid-of-session-producing-this-dump>   # from $CLAUDE_SESSION_ID
+  - <uuid-of-session-producing-this-dump> # from $CLAUDE_SESSION_ID
 related:
   - "[[summary/<related-slug>--<date>]]"
   - "[[plan/bd-xxx-<slug>]]"
@@ -53,39 +54,49 @@ related:
 # Session context dump — <label>
 
 ## User's goal
+
 <in the user's words where possible; link concepts as [[concept/...]]>
 
 ## Current state
+
 <where we are right now — mid-implementation? debugging? planning?>
 
 ## Relevant files / locations
+
 - `[[<repo-relative-path>]]` — <why it matters>
 - ...
 
 ## What's been tried
+
 - <action> → <outcome>. Related: [[concept/<idea>]] / [[<file>]]
 - ...
 
 ## Open questions / decisions pending
+
 - <question>, options considered: [[concept/<option-a>]] vs [[concept/<option-b>]]
 
 ## Constraints and preferences surfaced
+
 - <anything the user said about how they want this done — tooling, conventions, hard "no"s>
 
 ## External references
+
 - Tickets: [[INGEST-482]], [[INGEST-500]]
 - PRs: [[PR-1234]]
 - Docs/URLs (external): [Some doc](https://...)
 
 ## Active TODOs
+
 - <pending task> — related [[...]]
 
 ## Related notes
+
 - [[summary/<slug>--<YYYY-MM-DD>]]
 - [[context/<other-label>--<YYYY-MM-DD>-<HHMM>]]
 - [[concept/<hub-idea>]]
 
 ## Raw excerpts worth keeping verbatim
+
 <quotes, error messages, command outputs, or snippets that would lose meaning if paraphrased>
 ```
 
