@@ -1,3 +1,14 @@
+## v0.5.10 (2026-04-29)
+
+Based on the provided information, I cannot write a meaningful changelog entry. While I can see there was a commit "8c27576 installer fixes" that suggests bug fixes were made to an installer component, no code diffs were provided to analyze what was actually changed.
+
+To write an accurate changelog entry following the specified rules, I would need to see the actual code diffs that show:
+- What specific installer issues were fixed
+- Which files or functions were modified
+- What the changes actually accomplish
+
+Please provide the code diffs for commit 8c27576 so I can analyze the actual changes and write appropriate release notes.
+
 ## v0.5.9 (2026-04-29)
 
 Based on the provided commit information, I cannot generate a meaningful changelog entry. The only commit shown is:

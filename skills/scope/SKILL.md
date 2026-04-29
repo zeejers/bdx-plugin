@@ -20,7 +20,7 @@ Used standalone (`/bdx:scope bd-xxx`) or called from `triage` when it decides an
 ## What this skill does (in order)
 
 1. **Resolve the bd-id** from `$ARGUMENTS`. Required — fail if missing.
-2. **Read the existing bd**: `bd show <id>` to get title, description, existing labels, status.
+2. **Read the existing bd**: `bd show <id>` to get title, description, existing labels, status, and priority (needed to seed the plan's `rank:` frontmatter).
 3. **Guard**: if a plan file already exists at `$AGENT_HOME/plan/<bd-id>-*.md` or the description contains `plan: $AGENT_HOME/plan/`, abort with the existing path — do not overwrite.
 4. **Derive slug** (kebab-case) from the bd title.
 5. **Derive labels** (see Labels section below). Apply via `bd update <id> -l <project> [-l <component>...]`. bd labels are additive — existing labels are preserved.
@@ -57,7 +57,7 @@ Identical to `plan`. Key seeding differences when scoping an existing bd:
 - **Goal**: extract from the bd's title + description. Reword to 1–2 sentences if the description was a single-liner.
 - **Context**: lead with "Originally captured as `bd-xxx` on `<created-date>`." then preserve the bd's original description body. Link any external refs found in the description.
 - **Plan**: if the bd's description lists concrete steps, convert to checkboxes. Otherwise leave `Phase 1 — TBD` with a single checkbox asking the next session to flesh it out.
-- **Frontmatter**: `status: draft`, `tags: [plan, <project>]`, `sessions: [$CLAUDE_SESSION_ID]`.
+- **Frontmatter**: `status: draft`, `tags: [plan, <project>]`, `sessions: [$CLAUDE_SESSION_ID]`. Seed `rank:` (0-99) from the bd's existing priority captured in step 2 — p0→10, p1→30, p2→50, p3→70. If priority is unset, default rank to 50.
 
 ## Rules
 

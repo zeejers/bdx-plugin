@@ -71,6 +71,17 @@ Naming convention:
 
 If the user didn't signal urgency, use `-p 2`.
 
+The plan's `rank:` frontmatter is a 0-99 number for fine-grained manual sort in Obsidian (lower = higher priority, matching bd's convention). Seed it from the chosen bd priority using these initial bands, leaving room to nudge within a tier:
+
+| bd `-p` | seed `rank` |
+|---|---|
+| 0 | 10 |
+| 1 | 30 |
+| 2 | 50 |
+| 3 | 70 |
+
+bd remains canonical for actual priority — `rank:` is a manual override for Obsidian sort and does not auto-sync if `bd update -p` runs later.
+
 ## Linking rules (critical for Obsidian graph view)
 
 - **All in-vault references are wikilinks**: `[[note-name]]` or `[[note-name|display]]`. Never use `[text](path.md)` for anything inside `$AGENT_HOME`.
@@ -93,6 +104,7 @@ aliases: []
 tags: [plan, <project-or-area>]
 private: false   # true = personal/side-project, skip team sync
 status: draft   # agents flip to in-progress / done via bd, not here
+rank: <0-99>   # seeded from bd priority at creation; manual override for fine-grained Obsidian sort. bd remains canonical.
 sessions:
   - <uuid-of-session-that-wrote-this>   # from $CLAUDE_SESSION_ID
 ---
@@ -160,7 +172,7 @@ sessions:
 3. Derive labels: project from `basename "$(git rev-parse --show-toplevel 2>/dev/null)"`; ask if not in a repo. Derive any component labels from conversation/paths.
 4. `bd create "<title>" -t task -p <0-3> -l <project> [-l <component> ...]` — capture `bd-xxx` from output.
 5. Read `$CLAUDE_SESSION_ID` — set by the `SessionStart` hook. If empty (e.g. running in `--print` mode where the hook doesn't fire), set `sessions: []` and continue.
-6. Write `$AGENT_HOME/plan/bd-xxx-<slug>.md` using the template above. Include `$CLAUDE_SESSION_ID` in `sessions:` list and the labels in `tags:`.
+6. Write `$AGENT_HOME/plan/bd-xxx-<slug>.md` using the template above. Include `$CLAUDE_SESSION_ID` in `sessions:` list, the labels in `tags:`, and seed `rank:` from the chosen `-p` value using the tier table above (p0→10, p1→30, p2→50, p3→70).
 7. `bd update bd-xxx -d "plan: $AGENT_HOME/plan/bd-xxx-<slug>.md"` to cross-link.
 8. Report the bd-id, labels, and absolute plan path back to the user in one line.
 
