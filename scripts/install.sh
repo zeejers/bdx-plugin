@@ -62,6 +62,44 @@ main() {
   warn() { printf '  \033[33m!\033[0m %s\n' "$*"; }
   die()  { printf '  \033[31m✗\033[0m %s\n' "$*" >&2; exit 1; }
 
+  # with_spinner "label" cmd args... — runs the command silently with a
+  # rotating spinner; on failure, dumps the captured output indented under
+  # the row so the user can see what broke. Falls back to plain "label …
+  # done/fail" when stdout isn't a TTY (CI, piped install).
+  with_spinner() {
+    local label="$1"; shift
+    if [ ! -t 1 ]; then
+      printf '  %s ... ' "$label"
+      if "$@" >/dev/null 2>&1; then
+        printf 'done\n'; return 0
+      else
+        printf 'fail\n'; return 1
+      fi
+    fi
+    local logfile
+    logfile=$(mktemp -t bdx-install.XXXXXX 2>/dev/null || mktemp)
+    ( "$@" >"$logfile" 2>&1 ) &
+    local cmd_pid=$!
+    local chars='|/-\'
+    local i=0
+    while kill -0 "$cmd_pid" 2>/dev/null; do
+      printf '\r  \033[36m%s\033[0m %s' "${chars:$i:1}" "$label"
+      i=$(( (i+1) % 4 ))
+      sleep 0.08
+    done
+    wait "$cmd_pid"
+    local rc=$?
+    printf '\r\033[K'
+    if [ "$rc" = 0 ]; then
+      printf '  \033[32m✓\033[0m %s\n' "$label"
+    else
+      printf '  \033[31m✗\033[0m %s\n' "$label"
+      [ -s "$logfile" ] && sed 's/^/      /' "$logfile" >&2
+    fi
+    rm -f "$logfile"
+    return "$rc"
+  }
+
   ask_yn() {
     # ask_yn "question" default(Y|N) -> 0 yes, 1 no
     local q="$1" d="${2:-Y}" prompt ans
@@ -261,28 +299,40 @@ main() {
     else
       info "target:         $target_ah"
       info "from branch:    $templates_branch (override with BDX_TEMPLATES_BRANCH=...)"
-      info "files:          manifest.md, personas/dhh.md, personas/linus.md"
       info "(existing files are never overwritten)"
-      if ask_yn "Seed example manifest + personas into $target_ah?" Y; then
-        mkdir -p "$target_ah/personas"
-        fetch_template() {
-          local url="$1" dest="$2" label="$3"
-          if [ -f "$dest" ]; then
-            info "$label already exists — skipped"
-            return 0
-          fi
-          if curl -fsSL "$url" -o "$dest" 2>/dev/null; then
-            ok "$label → $dest"
-          else
-            warn "failed to fetch $label from $url"
-            rm -f "$dest"
-          fi
-        }
-        fetch_template "$base_url/manifest.md"        "$target_ah/manifest.md"        "manifest.md"
-        fetch_template "$base_url/personas/dhh.md"    "$target_ah/personas/dhh.md"    "personas/dhh.md"
-        fetch_template "$base_url/personas/linus.md"  "$target_ah/personas/linus.md"  "personas/linus.md"
-      else
-        info "skipped — copy from examples/ in the repo when ready"
+      fetch_template() {
+        local url="$1" dest="$2" label="$3"
+        if [ -f "$dest" ]; then
+          info "$label already exists — skipped"
+          return 0
+        fi
+        if with_spinner "$label" curl -fsSL "$url" -o "$dest"; then
+          return 0
+        else
+          rm -f "$dest"
+          return 1
+        fi
+      }
+      if [ "$has_manifest" = 0 ]; then
+        if ask_yn "Seed example manifest.md into $target_ah?" Y; then
+          mkdir -p "$target_ah"
+          fetch_template "$base_url/manifest.md" "$target_ah/manifest.md" "manifest.md"
+        else
+          info "manifest skipped — copy from examples/ in the repo when ready"
+        fi
+      fi
+      # Personas default to N: seeding them auto-enables persona reviews in
+      # /bdx:summarize (the skill no-ops when $AGENT_HOME/personas is empty).
+      # Opt-in keeps a fresh install quiet by default.
+      if [ "$has_personas" = 0 ]; then
+        info "personas: dhh.md, linus.md — enables per-persona reviews on /bdx:summarize"
+        if ask_yn "Seed example personas into $target_ah/personas/?" N; then
+          mkdir -p "$target_ah/personas"
+          fetch_template "$base_url/personas/dhh.md"   "$target_ah/personas/dhh.md"   "personas/dhh.md"
+          fetch_template "$base_url/personas/linus.md" "$target_ah/personas/linus.md" "personas/linus.md"
+        else
+          info "personas skipped — copy from examples/personas/ when ready"
+        fi
       fi
     fi
   fi
@@ -337,12 +387,50 @@ main() {
     fi
   fi
 
-  bold "done"
+  # --- next steps card --------------------------------------------------
+  # Build the list dynamically so SKIP_ENV cleanly drops the "open a new
+  # shell" step. Each row is rendered into a unicode-box card sized to the
+  # longest line, capped at 76 cols for terminal-friendly width.
+  local steps=()
   if [ "$SKIP_ENV" = 0 ]; then
-    info "open a new shell (or 'source ${rc:-<your shell rc>}') to pick up env changes"
+    steps+=("open a new shell (or: source ${rc:-<your shell rc>})")
   fi
-  info "next: install the bdx Claude Code plugin —"
-  info "      claude plugin marketplace add zeejers/bdx-plugin && claude plugin install bdx@bdx-marketplace"
+  steps+=("claude plugin marketplace add zeejers/bdx-plugin")
+  steps+=("claude plugin install bdx@bdx-marketplace")
+  steps+=("")
+  steps+=("then in any project:")
+  steps+=("  /bdx:plan \"<your first task>\"   # creates a bd issue + plan")
+  steps+=("  bd ready                        # find unblocked work")
+
+  local title="✨ all set — next steps"
+  local inner_w=${#title}
+  local s
+  for s in "${steps[@]}"; do
+    [ ${#s} -gt "$inner_w" ] && inner_w=${#s}
+  done
+  inner_w=$(( inner_w + 4 ))
+  [ "$inner_w" -gt 76 ] && inner_w=76
+
+  local hbar=""
+  local _n=$inner_w
+  while [ "$_n" -gt 0 ]; do hbar="${hbar}─"; _n=$((_n - 1)); done
+
+  printf '\n'
+  printf '  \033[36m╭%s╮\033[0m\n' "$hbar"
+  printf '  \033[36m│\033[0m \033[1m%-*s\033[0m \033[36m│\033[0m\n' $((inner_w - 2)) "$title"
+  printf '  \033[36m├%s┤\033[0m\n' "$hbar"
+  local idx=1
+  for s in "${steps[@]}"; do
+    if [ -z "$s" ]; then
+      printf '  \033[36m│\033[0m %-*s \033[36m│\033[0m\n' $((inner_w - 2)) ""
+    elif [[ "$s" == "  "* ]] || [[ "$s" == "then "* ]]; then
+      printf '  \033[36m│\033[0m %-*s \033[36m│\033[0m\n' $((inner_w - 2)) "$s"
+    else
+      printf '  \033[36m│\033[0m %-*s \033[36m│\033[0m\n' $((inner_w - 2)) "$(printf '%d. %s' "$idx" "$s")"
+      idx=$((idx + 1))
+    fi
+  done
+  printf '  \033[36m╰%s╯\033[0m\n\n' "$hbar"
 }
 
 main "$@"
