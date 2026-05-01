@@ -1,22 +1,24 @@
 ---
 name: plan
-description: Create a beads issue and write a structured plan to $AGENT_HOME/plan that doubles as the execution prompt. Cross-links bd issue ↔ plan file.
+description: Open a new bd task with a paired plan file at $AGENT_HOME/plan/. Use for non-trivial work that warrants a written-down approach (multi-step, cross-cutting, or you'll need to re-enter cold). Skip for one-line fixes (just `bd create` + a body) or when the bd already exists (use scope instead). Predecessor: triage (or none, for fresh ideas). Successor: attach.
 user-invocable: true
 argument-hint: optional-title-or-slug
 ---
 
-Persist the plan that's been discussed in this conversation as an **Obsidian-friendly, agent-executable plan** at `$AGENT_HOME/plan/`, and create the paired beads issue so state lives in `bd` and content lives in Obsidian. This is the **before** half of the plan / dump / summarize triad.
+Open a new beads task and write the paired plan file to `$AGENT_HOME/plan/` — the plan doubles as the execution prompt for a future `attach`. bd holds state (status, deps, labels), the plan holds narrative (goal, scope, checkboxes, decisions). This skill is the only way a plan enters the system; do not write plan files ad-hoc elsewhere.
 
-This skill is the only way a plan enters the system — do not write plan files ad-hoc elsewhere.
+**Trigger**: starting non-trivial work that needs a written plan you'll execute later or hand off. **Skip** if (a) the work is trivial enough that a `bd create -t task "<title>"` body is the whole record, or (b) the bd already exists from triage / quick capture (use `scope` to retrofit it instead).
 
 ## What this skill does (in order)
 
 1. Draft a short title and kebab-case slug from the conversation or `$ARGUMENTS`.
 2. Derive labels (see Labels section below).
 3. Create the beads issue: `bd create "<title>" -t task -p <0-3> -l <project> [-l <component> ...]` and capture the returned `bd-xxx` ID.
-4. Write the plan to `$AGENT_HOME/plan/bd-xxx-<slug>.md` (see template below).
-5. Cross-link: `bd update bd-xxx -d "plan: $AGENT_HOME/plan/bd-xxx-<slug>.md"` so the beads issue points at the plan.
-6. Report the bd-id, labels, and path back to the user in one line.
+4. If a parent was specified (see Parent section), link it: `bd dep add bd-xxx <parent-id> -t parent-child`.
+5. Resolve the parent for frontmatter: `bd dep list bd-xxx --direction=down --type parent-child --json` → first `id` (or null).
+6. Write the plan to `$AGENT_HOME/plan/bd-xxx-<slug>.md` (see template below) with `parent:` populated.
+7. Cross-link: `bd update bd-xxx -d "plan: $AGENT_HOME/plan/bd-xxx-<slug>.md"` so the beads issue points at the plan.
+8. Report the bd-id, labels, parent (if any), and path back to the user in one line.
 
 ## Labels
 
@@ -50,6 +52,20 @@ If the scope is cross-cutting (touches multiple components), skip component labe
 
 - Don't create compound labels like `listscrub-ui` — that breaks the cross-repo component queries (`bd list -l ui`).
 - Don't add labels speculatively. A label should answer a real query someone would run.
+
+## Parent (optional)
+
+Plans can roll up under a parent bd (epic, umbrella initiative, etc.) so Obsidian Bases can group children by parent. Single-valued — a plan has at most one parent.
+
+**Detect a parent from:**
+
+- `$ARGUMENTS` containing `--parent bd-xxx` or `parent=bd-xxx`
+- Explicit conversation cue ("this rolls up under bd-xxx", "child of bd-xxx", "part of the bd-xxx epic")
+- Active context: if the user is clearly working inside a parent task (e.g. a plan was just attached for `bd-xxx` and they're filing a sub-task), confirm before linking
+
+If detected, link in bd: `bd dep add <new-id> <parent-id> -t parent-child`. bd is canonical — the frontmatter `parent:` is read from `bd dep list` after the link is set, never written speculatively.
+
+If no parent is detected, leave `parent:` empty (`parent:` with no value, or omit entirely). Don't ask — most plans are root-level.
 
 ## Output location
 
@@ -98,6 +114,8 @@ bd remains canonical for actual priority — `rank:` is a manual override for Ob
 ```markdown
 ---
 bd: bd-xxx
+kind: agent-note   # marks this as a bdx-generated artifact for vault-wide filtering
+parent:   # bd-yyy if this rolls up under a parent (epic / umbrella). Read from `bd dep list <id> --type parent-child`. Single-valued. Empty = root-level. bd is canonical; do not hand-edit.
 title: <human-readable title>
 created: <YYYY-MM-DD>
 aliases: []
@@ -170,11 +188,14 @@ sessions:
 1. `mkdir -p "$AGENT_HOME/plan"`.
 2. Derive title + slug from `$ARGUMENTS` or conversation.
 3. Derive labels: project from `basename "$(git rev-parse --show-toplevel 2>/dev/null)"`; ask if not in a repo. Derive any component labels from conversation/paths.
-4. `bd create "<title>" -t task -p <0-3> -l <project> [-l <component> ...]` — capture `bd-xxx` from output.
-5. Read `$CLAUDE_SESSION_ID` — set by the `SessionStart` hook. If empty (e.g. running in `--print` mode where the hook doesn't fire), set `sessions: []` and continue.
-6. Write `$AGENT_HOME/plan/bd-xxx-<slug>.md` using the template above. Include `$CLAUDE_SESSION_ID` in `sessions:` list, the labels in `tags:`, and seed `rank:` from the chosen `-p` value using the tier table above (p0→10, p1→30, p2→50, p3→70).
-7. `bd update bd-xxx -d "plan: $AGENT_HOME/plan/bd-xxx-<slug>.md"` to cross-link.
-8. Report the bd-id, labels, and absolute plan path back to the user in one line.
+4. Detect parent (see Parent section). If specified, validate the parent bd exists (`bd show <parent-id>` succeeds) before proceeding.
+5. `bd create "<title>" -t task -p <0-3> -l <project> [-l <component> ...]` — capture `bd-xxx` from output.
+6. If a parent was detected: `bd dep add bd-xxx <parent-id> -t parent-child`.
+7. Resolve parent for frontmatter: `bd dep list bd-xxx --direction=down --type parent-child --json` and take the first `id` (or empty if none).
+8. Read `$CLAUDE_SESSION_ID` — set by the `SessionStart` hook. If empty (e.g. running in `--print` mode where the hook doesn't fire), set `sessions: []` and continue.
+9. Write `$AGENT_HOME/plan/bd-xxx-<slug>.md` using the template above. Include `kind: agent-note`, `$CLAUDE_SESSION_ID` in `sessions:` list, the labels in `tags:`, the resolved parent in `parent:` (empty if none), and seed `rank:` from the chosen `-p` value using the tier table above (p0→10, p1→30, p2→50, p3→70).
+10. `bd update bd-xxx -d "plan: $AGENT_HOME/plan/bd-xxx-<slug>.md"` to cross-link.
+11. Report the bd-id, labels, parent (if any), and absolute plan path back to the user in one line.
 
 ## Resuming
 

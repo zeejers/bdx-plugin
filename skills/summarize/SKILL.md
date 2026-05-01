@@ -1,11 +1,13 @@
 ---
 name: summarize
-description: Summarize an implementation with full context, decisions made by agent and human, and a link to the plan if applicable. Writes to $AGENT_HOME/summary.
+description: Write the durable post-implementation record to $AGENT_HOME/summary/, attach persona reviews if any match, and back-link to the bd issue. Use when a task's work is done and ready to be remembered — even if the bd isn't being closed yet (follow-ups can keep the bd open). Skip mid-flight (use dump for fearlessly-log-out snapshots) or for trivial fixes where a `bd close -r` is the whole record. Predecessor: attach + a finished work session. Successor: close (which auto-runs summarize if missing).
 user-invocable: true
 argument-hint: optional-focus-or-filename
 ---
 
-Summarize what has just been implemented in this session and persist it to `$AGENT_HOME/summary/` as an **Obsidian-friendly note** — the user opens these in Obsidian and relies on graph view to see how summaries, plans, context dumps, files, tickets, and concepts interconnect. Every cross-reference must be a wikilink (`[[...]]`) so it shows up as an edge in the graph.
+Write the durable post-implementation record for this session's work to `$AGENT_HOME/summary/` as an **Obsidian-friendly note**. Persona reviews attach here if any match; cross-references are wikilinks (`[[...]]`) so graph view connects this summary to its plan, prior contexts, files, tickets, and concept hubs.
+
+**Trigger**: the work is done — even if the bd stays open for follow-ups. **Skip** if (a) the session is still mid-flight — use `dump` to snapshot head-state instead, or (b) the work is trivial enough that the `bd close -r "<one-liner>"` resolution captures everything worth remembering.
 
 ## Output location
 
@@ -36,8 +38,10 @@ Naming convention:
 ```markdown
 ---
 bd: bd-xxx   # or "none" if this work wasn't tracked in beads
+kind: agent-note   # marks this as a bdx-generated artifact for vault-wide filtering
+parent:   # bd-yyy if the bd has a parent-child link in bd. Empty = root-level. Read from `bd dep list <id> --type parent-child`. bd is canonical.
 title: <human-readable title>
-date: <YYYY-MM-DD>
+created: <YYYY-MM-DD>   # standardized on `created:` (was `date:` in earlier templates)
 aliases: []
 tags: [summary, <project-or-area>]
 private: false   # true = personal/side-project, skip team sync
@@ -94,12 +98,13 @@ sessions:
 ## Process
 
 1. `mkdir -p "$AGENT_HOME/summary"`.
-2. Identify the bd-id: from `$ARGUMENTS`, the plan file name in conversation, or ask. If the work truly has no bd issue, set `bd: none` in frontmatter and skip step 8 (the bd comment cross-link).
+2. Identify the bd-id: from `$ARGUMENTS`, the plan file name in conversation, or ask. If the work truly has no bd issue, set `bd: none` in frontmatter and skip steps 4 and 9 (parent resolution and the bd comment cross-link).
 3. Decide the slug and final path; check for collisions.
-4. Read `$CLAUDE_SESSION_ID` (set by SessionStart hook). If empty, set `sessions: []`.
-5. Scan the conversation for: original request, plan, decisions, file changes, verification steps, unresolved items, related prior summaries/context dumps.
-6. Write the file using the template above, with wikilinks everywhere and `$CLAUDE_SESSION_ID` in `sessions:`. Do not include the `## Persona reviews` section yet — step 7 appends it if personas return output.
-7. **Persona pass.** Follow the `persona` skill's instructions inline with the following free-form prompt as `$ARGUMENTS` (substitute the real path):
+4. Resolve parent for frontmatter: `bd dep list <id> --direction=down --type parent-child --json` → first `id` (empty if none).
+5. Read `$CLAUDE_SESSION_ID` (set by SessionStart hook). If empty, set `sessions: []`.
+6. Scan the conversation for: original request, plan, decisions, file changes, verification steps, unresolved items, related prior summaries/context dumps.
+7. Write the file using the template above, with wikilinks everywhere, `kind: agent-note`, the resolved `parent:`, and `$CLAUDE_SESSION_ID` in `sessions:`. Do not include the `## Persona reviews` section yet — the next step appends it if personas return output.
+8. **Persona pass.** Follow the `persona` skill's instructions inline with the following free-form prompt as `$ARGUMENTS` (substitute the real path):
 
    ```
    auto You are about to critique an implementation that was just shipped. The full writeup — what was built, files touched, key decisions, tradeoffs, what's verified, what's deferred — is at <full-path-to-just-written-summary>. Read it as evidence about the work and react to the work itself: the decisions, the scope, the approach, what was skipped or stubbed, what looks load-bearing vs. fragile. You are NOT reviewing the prose of the summary document — do not edit its wording, structure, or word choice. The summary is the lens onto the implementation; the implementation is the target.
@@ -109,8 +114,8 @@ sessions:
    - If output was returned: `Edit` the file to append a `## Persona reviews` section at the end, with each persona's block under a `### <persona-name>` subheader, verbatim.
    - If no persona matched: do nothing — the section stays absent. Do not block the summary on persona availability.
    - Do not re-invoke a persona that already gave a take in this session's conversation — skip it to avoid duplicating output the user already saw.
-8. Cross-link back to beads: `bd comment <bd-id> "summary: $AGENT_HOME/summary/<slug>--<date>.md"` — makes the summary discoverable from `bd show`.
-9. Report the path back to the user in one line.
+9. Cross-link back to beads: `bd comment <bd-id> "summary: $AGENT_HOME/summary/<slug>--<date>.md"` — makes the summary discoverable from `bd show`.
+10. Report the path back to the user in one line.
 
 ## When the work is done
 

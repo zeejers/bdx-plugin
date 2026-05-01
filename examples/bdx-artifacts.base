@@ -1,0 +1,69 @@
+filters:
+  - 'note.kind == "agent-note"'
+
+properties:
+  bd:
+    displayName: bd
+  parent:
+    displayName: Parent
+  title:
+    displayName: Title
+  status:
+    displayName: Status
+  created:
+    displayName: Created
+  rank:
+    displayName: Rank
+  file.folder:
+    displayName: Type
+
+views:
+  - type: table
+    name: "All bdx artifacts"
+    order:
+      - bd
+      - title
+      - file.folder
+      - parent
+      - status
+      - created
+
+  - type: table
+    name: "Plans by parent epic"
+    filters:
+      - 'file.folder == "plan"'
+    groupBy:
+      property: note.parent
+      direction: ASC
+    order:
+      - bd
+      - title
+      - status
+      - rank
+      - created
+
+  - type: table
+    name: "Plans — root level (no parent)"
+    filters:
+      and:
+        - 'file.folder == "plan"'
+        - 'note.parent == null || note.parent == ""'
+    order:
+      - bd
+      - title
+      - status
+      - rank
+      - created
+
+  - type: table
+    name: "Recent activity"
+    sort:
+      - property: note.created
+        direction: DESC
+    limit: 30
+    order:
+      - bd
+      - title
+      - file.folder
+      - parent
+      - created

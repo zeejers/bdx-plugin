@@ -1,11 +1,13 @@
 ---
 name: manifest
-description: Inspect a project on disk and add (or update) its entry in $AGENT_HOME/manifest.md. Infers slug, path, repo, type, components, and notes from the filesystem and git metadata.
+description: Inspect a project on disk and add or update its entry in $AGENT_HOME/manifest.md (slug, path, repo, type, components, notes — everything except aliases, which is asked). Use when onboarding a new repo to bdx so plan/scope can validate project + component labels against the manifest, or when a project's structure has shifted enough to need updating. Skip for routine label edits on a single bd issue (use `label` instead). The manifest is an infrastructure file, not a per-task one.
 user-invocable: true
 argument-hint: optional-project-path (defaults to cwd)
 ---
 
 Save manual manifest-editing work. Point this skill at a project directory; it inspects the filesystem + git to compose a manifest entry, shows you a diff, and (on your confirmation) appends or updates `$AGENT_HOME/manifest.md`.
+
+**Trigger**: a new repo needs to be visible to `plan` / `scope` (so their label validators recognize it), or an existing project's structure has shifted (new components, renamed paths). **Skip** for per-task or per-issue label work — that's `label`'s job.
 
 The **only** field the skill cannot infer is `aliases` — it'll ask you directly.
 

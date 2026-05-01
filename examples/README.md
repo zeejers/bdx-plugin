@@ -30,3 +30,15 @@ Included examples:
 - [`dhh.md`](./personas/dhh.md) — David Heinemeier Hansson. Architecture / over-abstraction / dependency-sprawl lens.
 
 Adapt them, replace them, or write your own. The frontmatter contract is small (`name:`, `description:` with a "Use when ..." phrase that `auto` mode matches against). Body is freeform prose — see the included examples for shape.
+
+## Obsidian Base (cross-artifact view)
+
+[`bdx-artifacts.base`](./bdx-artifacts.base) — an [Obsidian Base](https://help.obsidian.md/bases) that filters every bdx-generated note (`kind: agent-note`) into table views: all artifacts, plans grouped by parent epic, plans without a parent, and recent activity. Place at the root of your vault (e.g. `$AGENT_HOME/bdx-artifacts.base`).
+
+```bash
+cp examples/bdx-artifacts.base "$AGENT_HOME/bdx-artifacts.base"
+```
+
+Open it in Obsidian to see how `parent:` rolls phase plans up under their epic, and how `kind: agent-note` lets you filter the bdx layer out from the rest of your vault. If you don't use the views, the metadata isn't earning its keep — feel free to delete the file and skip writing those frontmatter fields going forward.
+
+Requires Obsidian 1.9+ (Bases feature). Older Obsidian: ignore — the frontmatter fields are still useful for `dataview` if you prefer.

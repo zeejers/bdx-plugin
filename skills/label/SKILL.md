@@ -1,11 +1,11 @@
 ---
 name: label
-description: Label a beads issue with plain labels or namespaced external refs (jira:ABC-123, linear:FOO-456, etc.). Applies to the bd issue and, for namespaced refs, propagates into the plan markdown's frontmatter + Obsidian wikilinks. Contexts/summaries are left as historical snapshots.
+description: Apply plain labels or namespaced external refs (jira:..., linear:..., gh:..., figma:...) to a bd issue, and propagate namespaced refs into the linked plan's frontmatter + Obsidian wikilinks. Use to wire a bd into outside-world tracking (Jira ticket, GitHub issue, Figma file) or to add ad-hoc tags. Skip for project/component labels (those belong on plan/scope at task creation, not after) and for parent-child relationships (use `bd dep add <child> <parent> -t parent-child` directly so frontmatter re-derives correctly). Contexts/summaries are left as historical snapshots.
 user-invocable: true
 argument-hint: bd-id <label-or-ref> [<label-or-ref> ...]
 ---
 
-Add labels or external references to an existing beads issue and sync the plan markdown so Obsidian graph view picks up the links. Supports two kinds of labels:
+Add labels or external references to an existing bd issue and sync the plan markdown so Obsidian graph view picks up the links. Supports two kinds of labels:
 
 - **Plain labels** — e.g. `priority-high`, `needs-design`, `blocked-by-legal`. Go on the bd issue only.
 - **Namespaced external references** — any label containing `:` is treated as an external ref, e.g. `jira:ZAP-50`, `linear:FOO-123`, `gh:listscrub/platform#412`, `figma:<file-id>`. These go on the bd issue AND into the plan's `external:` frontmatter, plus a wikilink in the plan's Related section for Obsidian graph view.

@@ -1,3 +1,14 @@
+## v0.5.12 (2026-05-01)
+
+I can see there is one commit (a906ae1 with message "devx"), but no code diffs were provided in your input. Without being able to see the actual code changes, I cannot write a meaningful changelog entry that describes what was actually built or modified.
+
+To write accurate release notes, I would need to see the code diffs that show:
+- What files were changed
+- What functions/components were added, modified, or removed
+- What specific functionality was implemented
+
+Could you please provide the code diffs for the commit so I can analyze the actual changes and write appropriate release notes?
+
 ## v0.5.10 (2026-05-01)
 
 I can see the commit hash `31962de` with the message "rank", but no code diffs were provided in your input. Without the actual code changes, I cannot write a meaningful changelog entry that follows your rules about describing what the actual code does.

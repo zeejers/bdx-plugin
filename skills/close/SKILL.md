@@ -1,13 +1,15 @@
 ---
 name: close
-description: Finalize a beads task. Ensures a summary exists (runs summarize if missing), then closes the bd issue with a resolution message.
+description: Finalize a bd task — ensure a summary exists (auto-running summarize if not), then `bd close` with a one-line resolution. Use when the work is actually done and you're ready to retire the issue from the active queue. Skip if there's still real follow-up work — keep the bd open. Predecessor: summarize (close runs it implicitly if missing). Successor: terminal — close ends the lifecycle.
 user-invocable: true
 argument-hint: bd-id [and/or resolution message]
 ---
 
-Close out a finished (or abandoned) task: verify a summary exists for the beads issue, and `bd close` it with a resolution. This is the **finalize** step of the `plan` → `dump` → `summarize` → `close` flow.
+Close out a finished (or abandoned) task: verify a summary exists for the bd issue, then `bd close` it with a resolution. The **finalize** step that ends the triage → plan → attach → summarize → close lifecycle.
 
-Closing is deliberately separate from summarizing — a task can have a written summary and still have follow-ups open. Closing means "this is actually done." Zombie issues (summary written, bd never closed) are the failure mode this skill prevents.
+**Trigger**: the work is done and you're ready to retire the bd from `bd ready` / `bd todo`. **Skip** if there's still meaningful follow-up — keep the bd open even though a summary may already exist (summary and close are deliberately decoupled).
+
+Zombie issues (summary written, bd never closed) are the failure mode this skill prevents.
 
 ## What this skill does (in order)
 

@@ -1,11 +1,13 @@
 ---
 name: persona
-description: Invoke a saved persona from $AGENT_HOME/personas/ over a target — file, bd-id, diff, prose, or free-form prompt — and produce output in their voice. Use 'auto' to pick 1–3 contextually-relevant personas from the library based on their descriptions.
+description: Invoke a saved persona from $AGENT_HOME/personas/ to review a target (file, bd-id, diff, prose, or free-form prompt) in their voice — or use `auto` to let the library pick 1–3 personas by their `description:` field. Use when a sharp opinion in a specific voice is more useful than a neutral take (code review, plan critique, prose pass). Skip if you want consensus or hedged synthesis — this skill prints disagreements verbatim. Used internally by summarize to attach reviews to shipped work; otherwise standalone.
 user-invocable: true
 argument-hint: <slug|auto> <task or target>
 ---
 
 Run a named persona over a target and produce output following their voice and viewpoint. Personas are saved prompts with strong opinions stored at `$AGENT_HOME/personas/<slug>.md`; this skill is the primitive for invoking them.
+
+**Trigger**: you want a sharp, opinionated take on something specific (a file, a plan, a diff, a piece of prose) in a known voice. **Skip** if you want a balanced/neutral review, or if you want me to synthesize across multiple voices — this skill deliberately prints contradictions rather than reconciling them.
 
 General-purpose: use it to review a blog post, audit a plan, rewrite a paragraph, code-review a diff, or ask "what would <X> say about this?" `bdx.summarize` uses it internally to attach per-persona reviews to summaries, but nothing here is summary-specific.
 

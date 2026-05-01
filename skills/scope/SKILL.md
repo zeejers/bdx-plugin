@@ -1,11 +1,13 @@
 ---
 name: scope
-description: Scope an existing unscoped bd issue — add project + component labels and write its plan file. For bd issues created directly (e.g. from phone) that never went through plan.
+description: Retrofit an existing unscoped bd issue with a project label and a paired plan file. Use when a bd was created bare (phone capture, direct `bd create`, or as part of triage) and now needs to enter the plan/attach lifecycle. Skip if the bd already has a plan file (the plan is authoritative — edit it directly) or if you're starting fresh work without an existing bd (use plan instead). Predecessor: triage (or a manual `bd create`). Successor: attach.
 user-invocable: true
 argument-hint: bd-id
 ---
 
-Take an existing bd issue that lacks a project label and/or plan file, and bring it into the qf-managed system: add manifest-validated labels, write `$AGENT_HOME/plan/<bd-id>-<slug>.md`, cross-link. This is the "retarget `plan` at an existing bd" operation.
+Take an existing bd issue that lacks a project label and/or plan file, and bring it into the bdx system: add manifest-validated labels, write `$AGENT_HOME/plan/<bd-id>-<slug>.md`, cross-link. The "retarget `plan` at an existing bd" operation.
+
+**Trigger**: a bd-id exists (from triage, phone capture, or `bd create` shorthand) and now needs the plan-attach lifecycle. **Skip** if (a) the bd already has a plan file — open that file and edit it instead, or (b) you're starting fresh and don't have a bd-id yet — use `plan` instead.
 
 Used standalone (`/bdx:scope bd-xxx`) or called from `triage` when it decides an unscoped bd should become a real task.
 
@@ -24,10 +26,11 @@ Used standalone (`/bdx:scope bd-xxx`) or called from `triage` when it decides an
 3. **Guard**: if a plan file already exists at `$AGENT_HOME/plan/<bd-id>-*.md` or the description contains `plan: $AGENT_HOME/plan/`, abort with the existing path — do not overwrite.
 4. **Derive slug** (kebab-case) from the bd title.
 5. **Derive labels** (see Labels section below). Apply via `bd update <id> -l <project> [-l <component>...]`. bd labels are additive — existing labels are preserved.
-6. **Read `$CLAUDE_SESSION_ID`** (set by SessionStart hook). If empty, use `sessions: []`.
-7. **Write the plan file** at `$AGENT_HOME/plan/<bd-id>-<slug>.md` using the same template as `plan`. Seed Goal/Context from the bd's existing description.
-8. **Cross-link**: `bd update <id> -d "plan: $AGENT_HOME/plan/<bd-id>-<slug>.md"` (replaces description — so preserve the original text inside the plan's Goal/Context first, not the bd body).
-9. **Report** bd-id, labels added, plan path in one line.
+6. **Resolve parent** for frontmatter: `bd dep list <id> --direction=down --type parent-child --json` and take the first `id` (empty if none). bd is canonical — `scope` reads only; it does not create parent links.
+7. **Read `$CLAUDE_SESSION_ID`** (set by SessionStart hook). If empty, use `sessions: []`.
+8. **Write the plan file** at `$AGENT_HOME/plan/<bd-id>-<slug>.md` using the same template as `plan`, populating `parent:` with the resolved value (empty if none). Seed Goal/Context from the bd's existing description.
+9. **Cross-link**: `bd update <id> -d "plan: $AGENT_HOME/plan/<bd-id>-<slug>.md"` (replaces description — so preserve the original text inside the plan's Goal/Context first, not the bd body).
+10. **Report** bd-id, labels added, parent (if any), plan path in one line.
 
 ## Labels
 
@@ -57,7 +60,7 @@ Identical to `plan`. Key seeding differences when scoping an existing bd:
 - **Goal**: extract from the bd's title + description. Reword to 1–2 sentences if the description was a single-liner.
 - **Context**: lead with "Originally captured as `bd-xxx` on `<created-date>`." then preserve the bd's original description body. Link any external refs found in the description.
 - **Plan**: if the bd's description lists concrete steps, convert to checkboxes. Otherwise leave `Phase 1 — TBD` with a single checkbox asking the next session to flesh it out.
-- **Frontmatter**: `status: draft`, `tags: [plan, <project>]`, `sessions: [$CLAUDE_SESSION_ID]`. Seed `rank:` (0-99) from the bd's existing priority captured in step 2 — p0→10, p1→30, p2→50, p3→70. If priority is unset, default rank to 50.
+- **Frontmatter**: `kind: agent-note`, `status: draft`, `tags: [plan, <project>]`, `sessions: [$CLAUDE_SESSION_ID]`, `parent: <resolved-from-bd-dep-list-or-empty>`. Seed `rank:` (0-99) from the bd's existing priority captured in step 2 — p0→10, p1→30, p2→50, p3→70. If priority is unset, default rank to 50.
 
 ## Rules
 
@@ -74,8 +77,9 @@ Identical to `plan`. Key seeding differences when scoping an existing bd:
 3. Guard: if a plan already exists for this bd, print its path and abort.
 4. Derive slug from title (kebab-case, lowercase, drop stopwords).
 5. Derive project label (manifest scan → user pick if ambiguous). Derive component labels if applicable.
-6. `mkdir -p "$AGENT_HOME/plan"`.
-7. Write `$AGENT_HOME/plan/<bd-id>-<slug>.md` — seed Goal/Context from the bd's existing description (don't lose it).
-8. `bd update <id> -l <project> [-l <component>...]` — add labels.
-9. `bd update <id> -d "plan: $AGENT_HOME/plan/<bd-id>-<slug>.md"` — cross-link.
-10. Print one-line report: `bd-id labels=[...] plan=<path>`.
+6. Resolve parent: `bd dep list <id> --direction=down --type parent-child --json` → first `id` or empty.
+7. `mkdir -p "$AGENT_HOME/plan"`.
+8. Write `$AGENT_HOME/plan/<bd-id>-<slug>.md` — populate `parent:` with the resolved value (empty if none); seed Goal/Context from the bd's existing description (don't lose it).
+9. `bd update <id> -l <project> [-l <component>...]` — add labels.
+10. `bd update <id> -d "plan: $AGENT_HOME/plan/<bd-id>-<slug>.md"` — cross-link.
+11. Print one-line report: `bd-id labels=[...] parent=<bd-yyy|—> plan=<path>`.

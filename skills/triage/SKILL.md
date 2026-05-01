@@ -1,11 +1,13 @@
 ---
 name: triage
-description: Drain the inbox and/or unscoped bd issues — for each item, decide whether it attaches to an existing beads task or seeds a new one. Processes all items by default; does NOT start executing work.
+description: Drain the inbox and unscoped bd queues — for each item, decide whether to merge into an existing task or seed a new one (via plan or scope). Use periodically (start of day, between tasks, when the inbox is piling up) to clear capture into structured state. Skip for one-off conversions of a single item (use scope on the bd-id, or plan to convert one inbox note manually). Triage never starts execution — output is always tasks ready for a later attach. Predecessor: phone capture / `bd create` shorthand. Successor: plan or scope.
 user-invocable: true
 argument-hint: "optional — 'inbox' | 'bd' | <filename> | <bd-id>"
 ---
 
-Turn mobile-captured work (inbox markdown or bare `bd create` items) into real task state. By default, drains **both** sources: for each item, append to an existing bd issue (if there's a clear active workstream) or create/scope a task of its own. Output is always tasks ready to be picked up later via `attach` — triage never starts execution.
+Turn mobile-captured work (inbox markdown or bare `bd create` items) into real task state. By default, drains **both** sources: for each item, append to an existing bd issue (if there's a clear active workstream) or seed a new task via `plan` / `scope`. Output is always tasks ready to be picked up later via `attach` — triage never starts execution.
+
+**Trigger**: the capture queue (inbox files + unscoped bds) needs draining. **Skip** for one-off conversions — use `scope` directly on a single bd-id, or `plan` to convert one inbox note by hand.
 
 ## Sources
 

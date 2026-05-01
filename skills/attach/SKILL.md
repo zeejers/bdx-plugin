@@ -1,16 +1,13 @@
 ---
 name: attach
-description: Attach the current Claude session to an existing beads task. Loads plan/context/summary artifacts, marks the session in the plan's sessions list, and sets bd status to in_progress.
+description: Resume an existing bd-tracked task: load its plan + prior contexts/summaries, append the current session UUID to the plan's `sessions:`, and flip bd status to in_progress. Use at the start of a session that's continuing prior work — especially if the prior session was dumped/closed cold and you need state loaded fresh. Skip for ad-hoc bd updates (a bare `bd update --status in_progress` is enough) or for starting brand-new work (use plan instead). Predecessor: plan or scope. Successor: dump (mid-session save) or summarize (when work ships).
 user-invocable: true
 argument-hint: bd-id
 ---
 
-Tap the current session into an existing beads issue / plan so Claude picks up cold with full task state. This is the counterpart to `plan` (which creates a new task): `attach` resumes an existing one.
+Tap the current session into an existing bd-tracked task so Claude picks up cold with full task state — plan, prior comments, prior context dumps, prior summaries — and the bd issue moves to in_progress. The counterpart to `plan` / `scope` (which create the task) and `dump` (which records mid-session head-state for a future attach to load).
 
-Use when:
-- You want to continue work on `bd-xxx` in a fresh session
-- You resumed via `claude --resume <uuid>` and also want the plan updated with this session (if it's a different UUID)
-- You're starting a session and want state loaded without recreating a plan
+**Trigger**: starting a session that's continuing prior work tracked in bd. **Skip** if (a) you only need a status flip — a bare `bd update <id> --status in_progress` is lighter, or (b) you're starting brand-new work — use `plan` to open the task first.
 
 ## What this skill does (in order)
 

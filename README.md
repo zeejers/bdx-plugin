@@ -38,18 +38,43 @@ A running agent session holds a lot of working memory — what the plan said, wh
 
 bdx couples every `bd` task to durable markdown — plans, mid-stream context dumps, summaries — keyed by bd-id with frontmatter and wikilinks. Sessions resume with full context loaded; nothing closes without a written record. The markdown lives in `$AGENT_HOME` so [Obsidian graph view](https://help.obsidian.md/Plugins/Graph+view) shows how tasks, decisions, and knowledge correlate across projects.
 
-## What's in the box
+## Lifecycle
+
+The skills compose as a state machine — each one names what comes before and after, so picking the right skill at any moment is a glance at the diagram, not a guess.
+
+```
+        capture                                 work
+   ┌──────────────┐                  ┌───────────────────────┐
+   │ inbox / bare │   triage         │                       │
+   │ bd create    │ ─────────► plan ─┤ attach ──► dump? ──┐  │
+   └──────────────┘     │            │   ▲                │  │
+                        │            │   │  resume cold   │  │
+                        └─► scope ───┤   └────────────────┘  │
+                                     │                       │
+                                     │       work done       │
+                                     └─► summarize ──► close │
+                                                             │
+                                            (terminal) ──────┘
+
+  orthogonal:  label  ·  manifest  ·  persona
+```
+
+**Read it as**: capture lands in inbox files or bare `bd create` rows. `triage` drains the queue into real tasks, routing each item to `plan` (new) or `scope` (retrofit existing bd). Either way you end up with a bd issue + paired plan file. `attach` resumes a session against that bd and loads everything tagged with the bd-id. Mid-session, `dump` snapshots head-state so you can fearlessly close the tab; the next `attach` pulls the dump back in. When the work is actually done, `summarize` writes the durable record (with optional persona reviews); `close` finalizes by ensuring a summary exists and `bd close`-ing.
+
+**Orthogonal skills** don't fit the lifecycle — they're tools you reach for when needed. `label` adds plain or external-ref labels (`jira:`, `linear:`, etc.). `manifest` registers a new project. `persona` invokes a saved reviewer voice.
 
 ### Skills (`/bdx:<name>`)
-- `plan` — create a bd issue + structured plan file
-- `attach` — resume an existing bd task, load plan/context/summary into the session
-- `dump` — mid-flight context snapshot (reloadable later)
-- `summarize` — post-implementation writeup to `$AGENT_HOME/summary/`
-- `close` — finalize a task (writes summary if missing, then closes with resolution)
-- `label` — apply plain labels or namespaced external refs (`jira:ABC-123`, `linear:FOO-456`)
-- `scope` — add project + component labels to an existing unscoped bd + write its plan
-- `triage` — drain inbox / unscoped bd issues into real tasks
-- `manifest` — inspect a project on disk and add/update its `$AGENT_HOME/manifest.md` entry
+
+- `plan` — open a new bd task + paired plan file. *Use for non-trivial work; skip for one-line fixes or existing bds (use `scope`).*
+- `scope` — retrofit an existing bd (no plan, no project label) into the lifecycle. *Predecessor: `triage` or bare `bd create`.*
+- `attach` — resume an existing bd task in a fresh session: load plan + prior contexts/summaries, flip status to in_progress. *Predecessor: `plan` or `scope`. Successor: `dump` or `summarize`.*
+- `dump` — snapshot session head-state to `$AGENT_HOME/context/` so you can log out fearlessly. *Trigger is leaving the session, not noting things — use a `bd comment` if you're still working.*
+- `summarize` — write the durable post-implementation record to `$AGENT_HOME/summary/`, with optional persona reviews. *Predecessor: a finished work session. Successor: `close`.*
+- `close` — finalize the task: ensure a summary exists, then `bd close` with a resolution. *Terminal — closes the lifecycle.*
+- `triage` — drain inbox + unscoped-bd queues into structured tasks. *Hands off to `plan` (new) or `scope` (retrofit). Never starts execution.*
+- `label` *(orthogonal)* — apply plain labels or namespaced external refs (`jira:`, `linear:`, `gh:`, `figma:`); namespaced refs propagate into the plan's frontmatter + Obsidian wikilinks.
+- `manifest` *(orthogonal)* — register or update a project entry in `$AGENT_HOME/manifest.md` so `plan`/`scope` can validate labels against it.
+- `persona` *(orthogonal)* — invoke a saved reviewer voice over a target (file, bd-id, diff, prose). Used internally by `summarize`; standalone-callable too.
 
 ### Hooks
 - **`SessionStart` (startup + resume)** → `capture-session-id.sh`
