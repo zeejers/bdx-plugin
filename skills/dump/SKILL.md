@@ -1,15 +1,26 @@
 ---
 name: dump
-description: Snapshot mid-session head-state to $AGENT_HOME/context/ so the user can fearlessly log out and a future `attach` can re-enter cold. Use when the user is about to walk away from a session (closing the tab, switching tasks, end-of-day) and the work isn't ready to summarize. Skip if the only thing worth recording fits in a bd comment or is already in the plan's checkboxes.
+description: Snapshot mid-session head-state to $AGENT_HOME/context/ so the user can fearlessly log out and a future `attach` can re-enter cold. Also sweeps the plan for obviously-done checkboxes and ticks them (with optional one-line divergence annotations) so the plan stays a live progress view. Use when the user is about to walk away from a session (closing the tab, switching tasks, end-of-day) and the work isn't ready to summarize. Skip if a single step just finished and you only want the plan ticked — use `check` for that lighter operation.
 user-invocable: true
 argument-hint: optional-label
 ---
 
 Snapshot the current session's head-state to `$AGENT_HOME/context/` so the user can close the session without losing the thread — a future `attach` re-enters cold and picks up where this left off. Written as an **Obsidian-friendly note**: graph view shows how the dump connects to summaries, plans, files, concepts, and tickets, so every in-vault cross-reference is a wikilink (`[[...]]`).
 
-Trigger is *the act of leaving*, not "mid-flight notes". If the user is still actively working, prefer a `bd comment` (state) or editing the plan (intent). `dump` is for the moment before context is lost.
+Trigger is *the act of leaving*, not "mid-flight notes". If the user is still actively working but a step just finished, prefer `check` (cheap, ticks one checkbox) or a `bd comment` (state). `dump` is for the moment before context is lost.
 
 This is broader and lossier than `summarize` — it captures conversational state (what the user wants, what's been tried, what's pending) rather than a clean post-implementation writeup. If the work is *done*, run `summarize` instead.
+
+## Plan mutation: tick + annotate, never rewrite
+
+`dump` doubles as a final progress sweep on the plan. Before writing the context file:
+
+- **Tick any `- [ ]` whose work is clearly finished** based on the conversation. Conservative — leave it open if there's any doubt. The plan file's role as a live progress view is exactly what makes peeking at it useful, but a falsely-ticked box poisons that.
+- **Optionally append one inline divergence annotation** per ticked box, in the form `- [x] <original text> → <one-line divergence>`. Same rules as `check`'s `--note`: single line, no markdown beyond inline code, append-only — never rewrite the original checkbox text.
+- **Never rewrite descriptive prose, reorder sections, delete content, or restructure the plan.** The plan-as-prompt diff against the eventual summary is load-bearing — that's how a future reader sees "what we set out to do" vs "what shipped." `dump` preserves it; `summarize` is where any prose-level reflection lives, and even there the default is to leave the plan intact.
+- **Append `$CLAUDE_SESSION_ID` to the plan's `sessions:` frontmatter** if not already present.
+
+If the plan needs structural change (a new phase, a deleted step, a reframed goal), that's a signal the task's shape has shifted and the user should decide explicitly — not a mutation `dump` should make on its own.
 
 ## Output location
 
@@ -119,11 +130,13 @@ related:
 ## Process
 
 1. `mkdir -p "$AGENT_HOME/context"`.
-2. Identify the bd-id: from `$ARGUMENTS`, the plan file in conversation, or ask. If the dump isn't tied to a beads issue (e.g. exploratory research), set `bd: none` and skip step 8.
+2. Identify the bd-id: from `$ARGUMENTS`, the plan file in conversation, or ask. If the dump isn't tied to a beads issue (e.g. exploratory research), set `bd: none` and skip steps 7 and 10.
 3. Compute filename and confirm no collision.
 4. Resolve parent for frontmatter: `bd dep list <id> --direction=down --type parent-child --json` → first `id` (empty if none, or if `bd: none`).
 5. Read `$CLAUDE_SESSION_ID` (set by SessionStart hook). If empty, set `sessions: []`.
 6. Walk back through the conversation and fill each section, wikilinking files / concepts / tickets / prior notes.
-7. Write the file with `kind: agent-note`, the resolved `parent:` (empty if none), and `$CLAUDE_SESSION_ID` in `sessions:`.
-8. Cross-link back to beads: `bd comment <bd-id> "context: $AGENT_HOME/context/<label>--<date>-<time>.md"` — makes the dump discoverable from `bd show`.
-9. Report the path back to the user in one line.
+7. **Plan sweep** (skip if `bd: none`): locate `$AGENT_HOME/plan/<bd-id>-*.md`. For each `- [ ]` line whose step is clearly done per the conversation, flip it to `- [x]` (and append `→ <one-line divergence>` if the implementation diverged in a small, captureable way — see "Plan mutation" rules above). Do not touch any other text in the plan. Append `$CLAUDE_SESSION_ID` to the plan's `sessions:` list if not already present.
+8. Write the context file with `kind: agent-note`, the resolved `parent:` (empty if none), and `$CLAUDE_SESSION_ID` in `sessions:`.
+9. Cross-link back to beads: `bd comment <bd-id> "context: $AGENT_HOME/context/<label>--<date>-<time>.md"` — makes the dump discoverable from `bd show`.
+10. If any checkboxes were ticked in step 7, optionally `bd comment <bd-id> "checked (via dump): <one-line list>"` so the bd thread reflects progress (skip if you'd rather keep the comment thread quiet — the plan diff itself is a record).
+11. Report the context file path and the count of ticked boxes (if any) to the user in one line.

@@ -1,3 +1,12 @@
+## v0.5.13 (2026-05-01)
+
+### 🛠️ Improvements
+- [commits] Enhanced skill documentation and added Obsidian base example
+
+---
+
+*Note: No code diffs were provided to analyze specific implementation details. This changelog is based solely on the commit message.*
+
 ## v0.5.12 (2026-05-01)
 
 I can see there is one commit (a906ae1 with message "devx"), but no code diffs were provided in your input. Without being able to see the actual code changes, I cannot write a meaningful changelog entry that describes what was actually built or modified.

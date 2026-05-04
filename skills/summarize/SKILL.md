@@ -95,16 +95,25 @@ sessions:
 - **`private: false` by default.** Summaries are the strongest team-sync candidate — flip to `true` only for personal/side-project work. The sync layer honors the flag.
 - **Persona blocks are pasted verbatim.** When the persona pass returns output, paste it as-is — don't smooth contradictions between personas, don't pick a winner, don't rewrite into wikilink style. The voices and disagreements are the value. The summary's own sections still follow all the linking rules; the persona section is an exception.
 
+## Plan mutation: final sweep, no rewrite
+
+The summary is the canonical "what shipped" record — that's its job. The plan stays close to its original shape so a future reader can diff *intent* against *outcome*. Concretely:
+
+- **Final checkbox sweep is allowed.** Same rules as `dump` and `check`: tick any `- [ ]` whose work is now done, and optionally append a one-line `→ <divergence>` annotation per ticked box. Conservative — don't tick what wasn't actually finished.
+- **Do not rewrite the plan's prose, scope, goals, or section structure.** The plan-vs-summary diff is the value; rewriting the plan to match the summary destroys it. If the implementation diverged enough that the plan is actively misleading to a future reader, capture that in the summary's `## What was built` and `## Key decisions` — that's exactly what the summary is for.
+- **`sessions:` is append-only.** Add `$CLAUDE_SESSION_ID` to the plan's frontmatter if not already present. Never replace the list.
+
 ## Process
 
 1. `mkdir -p "$AGENT_HOME/summary"`.
-2. Identify the bd-id: from `$ARGUMENTS`, the plan file name in conversation, or ask. If the work truly has no bd issue, set `bd: none` in frontmatter and skip steps 4 and 9 (parent resolution and the bd comment cross-link).
+2. Identify the bd-id: from `$ARGUMENTS`, the plan file name in conversation, or ask. If the work truly has no bd issue, set `bd: none` in frontmatter and skip steps 4, 7, and 10 (parent resolution, plan sweep, and the bd comment cross-link).
 3. Decide the slug and final path; check for collisions.
 4. Resolve parent for frontmatter: `bd dep list <id> --direction=down --type parent-child --json` → first `id` (empty if none).
 5. Read `$CLAUDE_SESSION_ID` (set by SessionStart hook). If empty, set `sessions: []`.
 6. Scan the conversation for: original request, plan, decisions, file changes, verification steps, unresolved items, related prior summaries/context dumps.
-7. Write the file using the template above, with wikilinks everywhere, `kind: agent-note`, the resolved `parent:`, and `$CLAUDE_SESSION_ID` in `sessions:`. Do not include the `## Persona reviews` section yet — the next step appends it if personas return output.
-8. **Persona pass.** Follow the `persona` skill's instructions inline with the following free-form prompt as `$ARGUMENTS` (substitute the real path):
+7. **Final plan sweep** (skip if `bd: none`): locate `$AGENT_HOME/plan/<bd-id>-*.md`. Tick any remaining `- [ ]` whose work is clearly done (with optional `→ <divergence>` annotations per the rules above). Do not touch other plan content. Append `$CLAUDE_SESSION_ID` to the plan's `sessions:` list if not already present.
+8. Write the summary file using the template above, with wikilinks everywhere, `kind: agent-note`, the resolved `parent:`, and `$CLAUDE_SESSION_ID` in `sessions:`. Do not include the `## Persona reviews` section yet — the next step appends it if personas return output.
+9. **Persona pass.** Follow the `persona` skill's instructions inline with the following free-form prompt as `$ARGUMENTS` (substitute the real path):
 
    ```
    auto You are about to critique an implementation that was just shipped. The full writeup — what was built, files touched, key decisions, tradeoffs, what's verified, what's deferred — is at <full-path-to-just-written-summary>. Read it as evidence about the work and react to the work itself: the decisions, the scope, the approach, what was skipped or stubbed, what looks load-bearing vs. fragile. You are NOT reviewing the prose of the summary document — do not edit its wording, structure, or word choice. The summary is the lens onto the implementation; the implementation is the target.
@@ -114,8 +123,8 @@ sessions:
    - If output was returned: `Edit` the file to append a `## Persona reviews` section at the end, with each persona's block under a `### <persona-name>` subheader, verbatim.
    - If no persona matched: do nothing — the section stays absent. Do not block the summary on persona availability.
    - Do not re-invoke a persona that already gave a take in this session's conversation — skip it to avoid duplicating output the user already saw.
-9. Cross-link back to beads: `bd comment <bd-id> "summary: $AGENT_HOME/summary/<slug>--<date>.md"` — makes the summary discoverable from `bd show`.
-10. Report the path back to the user in one line.
+10. Cross-link back to beads: `bd comment <bd-id> "summary: $AGENT_HOME/summary/<slug>--<date>.md"` — makes the summary discoverable from `bd show`.
+11. Report the path back to the user in one line.
 
 ## When the work is done
 
